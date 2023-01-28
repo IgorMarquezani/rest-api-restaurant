@@ -1,0 +1,23 @@
+version: '3'
+services:
+  postgres:
+    image: "postgres"
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=bloodyroots
+      - POSTGRES_DB=restaurant
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./migration/docker-database-restaurant-initial.sql:/docker-entrypoint-initdb.d/docker-database-restaurant-initial.sql
+
+  pgadmin-compose:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "email@email.com"
+      PGADMIN_DEFAULT_PASSWORD: "123456"
+    ports:
+      - "54321:80"
+    depends_on:
+      - postgres
