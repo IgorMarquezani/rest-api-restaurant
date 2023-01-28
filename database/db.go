@@ -23,9 +23,15 @@ var (
 
 // QUERYS FOR ROOMS
 var (
+  SelectRoomByOwner string = "select * from rooms where owner=$1;"
   SearchRoomById    string = "select (owner) from rooms where id=$1"
   SelectRoom        string = "select * from rooms where id = $1;"
   SelectRoomGuests  string = "select (users.*) from users join guests on guests.user_id = users.id join rooms on rooms.id = guests.inviting_room where rooms.id = $1;"
+)
+
+// QUERY FOR INVITES
+var (
+  SearchInviteByTarget string = "select * from invites where target=$1;"
 )
 
 // MISCELLANEOUS

@@ -96,6 +96,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
   }
 
   if err := models.UpdateProduct(both, both.Old.ProductList); err != nil {
+    http.Error(w, "Unknow error", http.StatusConflict)
     message := strings.Split(err.Error(), " ")
     fmt.Println(message)
     return
@@ -104,26 +105,21 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
   w.WriteHeader(http.StatusAccepted)
 }
 
-// func UpdateProduct(w http.ResponseWriter, r *http.Request) {
-//   var both models.OldAndNew
-//   var productList models.ProductList
+func NewInvite(w http.ResponseWriter, r *http.Request) {
+  var user = models.InitUserByCookie(r)
+  var invite models.Invite
 
-//   json.NewDecoder(r.Body).Decode(&both)
+  json.NewDecoder(r.Body).Decode(&invite)
 
-//   cookie, _ := r.Cookie("room")
+  if user.Room.Id != invite.InvitingRoom {
+    http.Error(w, "Cannot invite to a room that you dont have permission", http.StatusConflict)
+    return
+  }
+}
 
-//   productList.Name = both.New.List
+func NewGuest(w http.ResponseWriter, r *http.Request) {
+  var guest models.Guest
 
-//   if err := productList.SetRoom(*cookie); err != nil {
-//     http.Error(w, err.Error(), http.StatusBadRequest)
-//     return
-//   }
+  json.NewDecoder(r.Body).Decode(&guest)
 
-//   if err := models.UpdateProduct(both, productList); err != nil {
-//     message := strings.Split(err.Error(), " ")
-//     fmt.Println(message)
-//     return
-//   }
-
-//   w.WriteHeader(http.StatusAccepted)
-// }
+}

@@ -17,8 +17,8 @@ func HandleRequest() {
   r.HandleFunc("/api/user/update", controllers.UpdateUser).Methods("Put")
   r.HandleFunc("/api/product_list/register", controllers.NewProductList).Methods("Post")
   r.HandleFunc("/api/product/register", controllers.NewProduct).Methods("Post")
-  //r.HandleFunc("/api/product/update", controllers.UpdateProduct).Methods("Put")
+  r.HandleFunc("/api/product/update", controllers.UpdateProduct).Methods("Put")
+  r.HandleFunc("/api/invite/new", controllers.NewInvite).Methods("Post")
   
   log.Fatal(http.ListenAndServe(":6000", r))
-  
 }
