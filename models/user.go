@@ -1,7 +1,8 @@
 package models
 
 import (
-  "database/sql"
+	"database/sql"
+	"fmt"
 
 	"net/http"
 
@@ -18,12 +19,27 @@ type User struct {
   Invites []Invite
 }
 
+func InitUserByRoom(room int) User {
+  var u User
+  var db = database.GetConnection()
+
+  query, err := db.Query(database.SelectUserByRoom, room)
+  if err != nil { panic(err) }
+
+  if query.Next() {
+    err := query.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
+    if err != nil { panic(err) }
+  }
+
+  return u
+}
+
 func InitUserByCookie(r *http.Request) User {
   var u User
 
   emailCookie, err := r.Cookie("email")
   if err != nil {
-    panic(err)
+    panic(fmt.Errorf("Missing email cookie"))
   }
 
   u = SelectUser(emailCookie.Value)
@@ -35,10 +51,10 @@ func InitUserByCookie(r *http.Request) User {
 
 func SelectUser(key any) User {
   var search *sql.Rows
-  var err error
+  var err     error
 
   db := database.GetConnection()
-  u := User{}
+  u  := User{}
 
   switch data := key.(type) {
   case string:
@@ -56,6 +72,14 @@ func SelectUser(key any) User {
     if err != nil { panic(err) }
   }
 
+  search.Close()
   return u
 }
 
+func InsertUser(u User) error {
+  db := database.GetConnection() 
+  
+  _, err := db.Query(database.InsertUser, u.Name, u.Email, u.Passwd, u.Img)
+
+  return err 
+}

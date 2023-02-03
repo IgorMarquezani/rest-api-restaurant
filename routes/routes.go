@@ -12,9 +12,8 @@ import (
 func HandleRequest() {
   r := mux.NewRouter()
   r.Use(middleware.SetAllContentType)
-  r.HandleFunc("/api/user/register", controllers.NewUser).Methods("Post")
-  r.HandleFunc("/api/user/login", controllers.EnterUser).Methods("Post")
-  r.HandleFunc("/api/user/update", controllers.UpdateUser).Methods("Put")
+  r.Handle("/api/user/register", controllers.Register{}).Methods("Post")
+  r.Handle("/api/user/login", controllers.Login{}).Methods("Post")
   r.HandleFunc("/api/product_list/register", controllers.NewProductList).Methods("Post")
   r.HandleFunc("/api/product/register", controllers.NewProduct).Methods("Post")
   r.HandleFunc("/api/product/update", controllers.UpdateProduct).Methods("Put")

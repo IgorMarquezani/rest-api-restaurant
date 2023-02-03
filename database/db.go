@@ -12,6 +12,7 @@ var (
   InsertUser        string = "INSERT INTO users (name, email, passwd, img) VALUES ($1, $2, $3, $4);"
 	SearchUserByEmail string = "SELECT * FROM users WHERE email=$1;"
 	SearchUserById    string = "SELECT * FROM users WHERE id=$1;"
+  SelectUserByRoom  string = "select (users.*) from users join rooms on rooms.owner = users.id where rooms.id = $1" 
 )
 
 // QUERYS FOR PRODUCTS
@@ -23,15 +24,21 @@ var (
 
 // QUERYS FOR ROOMS
 var (
-  SelectRoomByOwner string = "select * from rooms where owner=$1;"
+  SelectRoomByOwner string = "select * from rooms where owner = $1"
   SearchRoomById    string = "select (owner) from rooms where id=$1"
-  SelectRoom        string = "select * from rooms where id = $1;"
   SelectRoomGuests  string = "select (users.*) from users join guests on guests.user_id = users.id join rooms on rooms.id = guests.inviting_room where rooms.id = $1;"
 )
 
 // QUERY FOR INVITES
 var (
   SearchInviteByTarget string = "select * from invites where target=$1;"
+)
+
+// QUERY FOR USER SESSIONS
+var (
+  InsertNewSession    string = "insert into users_session (who, securePS) values ($1, $2);"
+  SelectSessionByUId  string = "select * from users_session where who = $1;"
+  UpdateSessionAcRoom string = "update users_session set active_room = $1"
 )
 
 // MISCELLANEOUS

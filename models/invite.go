@@ -17,6 +17,7 @@ func SelectInviteByUser(u User) []Invite {
   if err != nil { panic(err) }
 
   for i := 0; search.Next(); i++ {
+    invites = append(invites, Invite{})
     err := search.Scan(&invites[i].Id, &invites[i].Target, &invites[i].InvitingRoom, &invites[i].Status)
     if err != nil { panic(err) }
   }
