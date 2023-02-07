@@ -2,87 +2,75 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/api/database"
 	"github.com/api/models"
-
-	"database/sql"
+	"github.com/api/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Login struct {
-  u models.User
-  db *sql.DB 
+	user  models.User
+  session models.UserSession
 }
 
-func (l Login) hashPasswd() string {
-  if l.u.Passwd == "" { panic("Passwd is empty") }
+func (l *Login) setSessionCookie(w http.ResponseWriter) {
+	cookie := http.Cookie {
+		Name:  "_SecurePS",
+		Value: utils.Invert(l.session.SecurePS),
+    Expires: time.Time{}.Add(time.Minute * 120),
+	}
 
-  hashed, err := bcrypt.GenerateFromPassword([]byte(l.u.Passwd), 8)
-  if err != nil { panic(err) }
-
-  return string(hashed)
+	http.SetCookie(w, &cookie)
 }
 
-func (l Login) setPasswdCookie(w http.ResponseWriter, hashed string) {
-  err := bcrypt.CompareHashAndPassword( []byte(hashed), []byte(l.u.Passwd))
-  if err != nil {
-    panic(err)
+func (l *Login) newSession() {
+  var ok bool
+  if l.user.Room.Owner == 0 {
+    l.user.Room = models.SelectRoom(l.user.Id)
+  } 
+
+  if l.session, ok = models.ThereIsSession(l.user); !ok {
+    again:
+    var hash string = string(utils.RandomByteArray())
+    if _, finded := models.SessionBySecurePS([]byte(hash)); finded {
+      goto again
+    }
+
+    l.session, _ = models.StartSession(l.user, hash)
+    return 
   }
 
-  cookie := http.Cookie {
-    Name:  "_SecurePS",
-    Value: hashed,
-  }
-
-  http.SetCookie(w, &cookie)
-}
-
-func (l Login) setActiveRoom() {
-  var session models.UserSession
-  l.u.Room = models.SelectRoom(l.u.Id)
-
-  search, err := l.db.Query(database.SelectSessionByUId, l.u.Id)
-  if err != nil { panic(err) }
-
-  if search.Next() {
-    err := search.Scan(session.Who, session.SecurePS, session.ActiveRoom)
-    if err != nil { panic(err) }
-  }
-  search.Close()
-
-  if session.ActiveRoom != 0 { return }
-
-  _, err = l.db.Query(database.UpdateSessionAcRoom, l.u.Room.Id)
-  if err != nil {
-    panic(err)
+  if l.session.ActiveRoom == 0 {
+    err := models.UpdateActiveRoom(&l.session, l.user.Room)
+    if err != nil {
+      panic(err)
+    }
   }
 }
 
 func (l Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  var uj models.User
-  json.NewDecoder(r.Body).Decode(&uj)
-  us := models.SelectUser(uj.Email);
+	var userJson models.User
+	json.NewDecoder(r.Body).Decode(&userJson)
+	l.user = models.SelectUser(userJson.Email)
 
-  if us.Email == "" {
-    http.Error(w, "E-mail not registered", http.StatusNotFound)
-    return
-  }
+	if l.user.Email == "" {
+		http.Error(w, "E-mail not registered", http.StatusUnauthorized)
+		return
+	}
 
-  if uj.Passwd != us.Passwd {
-    http.Error(w, "Incompatible password", http.StatusConflict)
-    return
-  }
+  err := bcrypt.CompareHashAndPassword([]byte(l.user.Passwd), []byte(userJson.Passwd))
+	if err != nil{
+		http.Error(w, "Incompatible password", http.StatusUnauthorized)
+		return
+	}
 
-  l.u = us
-  l.u.Room = models.SelectRoom(l.u.Id)
-  l.db = database.GetConnection()
-  //l.setActiveRoom()
-  l.setPasswdCookie(w, l.hashPasswd())
+  l.newSession()
+	l.setSessionCookie(w)
+  l.user.Id = 0
 
-  w.WriteHeader(http.StatusAccepted)
-  json.NewEncoder(w).Encode(us)
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(l.user)
 }

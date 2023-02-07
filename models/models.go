@@ -6,11 +6,10 @@ import (
 	"github.com/api/database"
 )
 
-func InsertProductList (pr ProductList) error {
-  db := database.GetConnection()
+func InsertProductList(pr ProductList) error {
+	db := database.GetConnection()
 
-  _, err := db.Query(database.InsertProductList, pr.Name, pr.Room)
+	_, err := db.Query(database.InsertProductList, pr.Name, pr.Room)
 
-  return err
+	return err
 }
-

@@ -9,15 +9,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func UserRoutes(r *mux.Router) {
+}
+
+func ProdListRoutes (r *mux.Router) {
+
+}
+
+func ProductsRoutes (r *mux.Router) {
+
+}
+
 func HandleRequest() {
   r := mux.NewRouter()
   r.Use(middleware.SetAllContentType)
   r.Handle("/api/user/register", controllers.Register{}).Methods("Post")
   r.Handle("/api/user/login", controllers.Login{}).Methods("Post")
-  r.HandleFunc("/api/product_list/register", controllers.NewProductList).Methods("Post")
+  r.Handle("/api/product_list/register", controllers.RegisterList{}).Methods("Post")
   r.HandleFunc("/api/product/register", controllers.NewProduct).Methods("Post")
   r.HandleFunc("/api/product/update", controllers.UpdateProduct).Methods("Put")
-  r.HandleFunc("/api/invite/new", controllers.NewInvite).Methods("Post")
   
   log.Fatal(http.ListenAndServe(":6000", r))
 }
