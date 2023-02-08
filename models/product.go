@@ -9,12 +9,12 @@ type ProductName string
 type ProductMap map[ProductName]Product
 
 type Product struct {
-  ListName    string `json:"list_name"`
-  ListRoom    int `json:"list_room"`
-	Name        string      `json:"name"`
-	Price       float64     `json:"price"`
-	Description string      `json:"description"`
-	Image       []byte      `json:"image"`
+	ListName    string  `json:"list_name"`
+	ListRoom    int     `json:"list_room"`
+	Name        string  `json:"name"`
+	Price       float64 `json:"price"`
+	Description string  `json:"description"`
+	Image       []byte  `json:"image"`
 }
 
 type UpdatingProduct struct {

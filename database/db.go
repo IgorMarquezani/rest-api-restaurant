@@ -9,11 +9,11 @@ import (
 
 // QUERYS FOR USERS
 var (
-	InsertUser        string = "INSERT INTO users (name, email, passwd, img) VALUES ($1, $2, $3, $4);"
-	SearchUserByEmail string = "SELECT * FROM users WHERE email=$1;"
-	SearchUserById    string = "SELECT * FROM users WHERE id=$1;"
-	SelectUserByRoom  string = "select (users.*) from users join rooms on rooms.owner = users.id where rooms.id = $1"
-  SearchUserBySession string = "select (users.*) from users join users_session on users.id = users_session.who where users_session.securePS = $1;"
+	InsertUser          string = "INSERT INTO users (name, email, passwd, img) VALUES ($1, $2, $3, $4);"
+	SearchUserByEmail   string = "SELECT * FROM users WHERE email=$1;"
+	SearchUserById      string = "SELECT * FROM users WHERE id=$1;"
+	SelectUserByRoom    string = "select (users.*) from users join rooms on rooms.owner = users.id where rooms.id = $1"
+	SearchUserBySession string = "select (users.*) from users join users_session on users.id = users_session.who where users_session.securePS = $1;"
 )
 
 // QUERYS FOR PRODUCTS
@@ -39,13 +39,13 @@ var (
 var (
 	InsertNewSession    string = "insert into users_session (who, active_room, securePS) values ($1, $2, $3);"
 	SelectSessionByUId  string = "select * from users_session where who = $1;"
-  SelectSessionByHash string = "select * from users_session where securePS = $1;"
+	SelectSessionByHash string = "select * from users_session where securePS = $1;"
 	UpdateSessionAcRoom string = "update users_session set active_room = $1 where who = $2"
 )
 
 // QUERY FOR GUESTS
 var (
-  SelectGuestByUserAndRoom string = "select * from guests where user_id = $1 and inviting_room = $2"
+	SelectGuestByUserAndRoom string = "select * from guests where user_id = $1 and inviting_room = $2"
 )
 
 // MISCELLANEOUS
@@ -71,4 +71,3 @@ func NewConnection() {
 func GetConnection() *sql.DB {
 	return db
 }
-

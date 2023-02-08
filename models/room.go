@@ -5,10 +5,10 @@ import (
 )
 
 type Room struct {
-	Id     int `json:"id"`
-	Owner  int `json:"owner"`
-	Guests guestMap
-  ProductsList ProdListMap 
+	Id           int `json:"id"`
+	Owner        int `json:"owner"`
+	Guests       guestMap
+	ProductsList ProdListMap
 }
 
 // unless you want to update the Guests field don't call that function again
@@ -43,7 +43,7 @@ func SelectRoom(owner int) Room {
 	var db = database.GetConnection()
 
 	result, err := db.Query(database.SelectRoomByOwner, owner)
-  defer result.Close()
+	defer result.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -56,18 +56,18 @@ func SelectRoom(owner int) Room {
 }
 
 func RoomById(id int) Room {
-  var room Room
-  room.Guests = make(guestMap)
-  var db = database.GetConnection()
+	var room Room
+	room.Guests = make(guestMap)
+	var db = database.GetConnection()
 
-  search, err := db.Query(database.SelectRoomById, id)
-  if err != nil {
-    panic(err)
-  }
+	search, err := db.Query(database.SelectRoomById, id)
+	if err != nil {
+		panic(err)
+	}
 
-  if search.Next() {
-    search.Scan(&room.Id, &room.Owner)
-  }
+	if search.Next() {
+		search.Scan(&room.Id, &room.Owner)
+	}
 
-  return room
+	return room
 }

@@ -7,9 +7,9 @@ type ProductListName string
 type ProdListMap map[ProductListName]ProductList
 
 type ProductList struct {
-	Name string `json:"name"`
-	Room int    `json:"room"`
-  Products ProductMap
+	Name     string `json:"name"`
+	Room     int    `json:"room"`
+	Products ProductMap
 }
 
 func InsertProductList(pr ProductList) error {

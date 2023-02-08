@@ -16,7 +16,7 @@ type User struct {
 	Img     []byte `json:"img"`
 	Room    Room
 	Invites []Invite
-  Session UserSession 
+	Session UserSession
 }
 
 func InitUserByRoom(room int) User {
@@ -70,7 +70,7 @@ func SelectUser(key any) User {
 }
 
 func InsertUser(u User) error {
-  u.Passwd = utils.HashString(u.Passwd)
+	u.Passwd = utils.HashString(u.Passwd)
 
 	db := database.GetConnection()
 
@@ -80,19 +80,19 @@ func InsertUser(u User) error {
 }
 
 func UserByHash(hash string) (User, error) {
-  var u User
-  db := database.GetConnection()
+	var u User
+	db := database.GetConnection()
 
-  search, err := db.Query(database.SearchUserBySession, hash)
-  if err != nil {
-    panic(err)
-  }
+	search, err := db.Query(database.SearchUserBySession, hash)
+	if err != nil {
+		panic(err)
+	}
 
-  if search.Next() {
-    search.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
-    u.Session, _ = ThereIsSession(u)
-    return u, nil
-  }
+	if search.Next() {
+		search.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
+		u.Session, _ = ThereIsSession(u)
+		return u, nil
+	}
 
-  return u, fmt.Errorf("No such session with this hash")
+	return u, fmt.Errorf("No such session with this hash")
 }

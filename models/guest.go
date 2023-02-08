@@ -11,20 +11,20 @@ type Guest struct {
 }
 
 func SelectGuestPermission(user, room int) int {
-  var guest Guest
-  var db = database.GetConnection()
+	var guest Guest
+	var db = database.GetConnection()
 
-  search, err := db.Query(database.SelectGuestByUserAndRoom, user, room)
-  if err != nil {
-    panic(err)
-  }
+	search, err := db.Query(database.SelectGuestByUserAndRoom, user, room)
+	if err != nil {
+		panic(err)
+	}
 
-  if search.Next() {
-    err := search.Scan(&guest.InvintingRoom, &guest.UserId, &guest.PermissionLevel)
-    if err != nil {
-      panic(err)
-    }
-  }
+	if search.Next() {
+		err := search.Scan(&guest.InvintingRoom, &guest.UserId, &guest.PermissionLevel)
+		if err != nil {
+			panic(err)
+		}
+	}
 
-  return guest.PermissionLevel
+	return guest.PermissionLevel
 }
