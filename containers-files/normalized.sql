@@ -271,3 +271,11 @@ CREATE TRIGGER log_user_trigger
 AFTER INSERT ON users 
 FOR EACH STATEMENT 
 EXECUTE PROCEDURE users_log_update();
+
+create table users_session (
+	who int primary key,
+	securePS varchar() unique not null,
+	active_room int,
+	foreign key (who) references users (id),
+	foreign key (active_room) references rooms (id)
+)
