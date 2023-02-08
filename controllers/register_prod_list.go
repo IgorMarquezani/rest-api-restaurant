@@ -44,5 +44,6 @@ func (rl RegisterList) ServeHTTP (w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
 }

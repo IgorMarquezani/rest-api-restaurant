@@ -4,8 +4,13 @@ import (
 	"github.com/api/database"
 )
 
+type ProductName string
+
+type ProductMap map[ProductName]Product
+
 type Product struct {
-	ProductList ProductList `json:"product_list"`
+  ListName    string `json:"list_name"`
+  ListRoom    int `json:"list_room"`
 	Name        string      `json:"name"`
 	Price       float64     `json:"price"`
 	Description string      `json:"description"`

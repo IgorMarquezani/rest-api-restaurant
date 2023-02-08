@@ -4,12 +4,11 @@ import (
 	"github.com/api/database"
 )
 
-type guestMap map[string]User
-
 type Room struct {
 	Id     int `json:"id"`
 	Owner  int `json:"owner"`
 	Guests guestMap
+  ProductsList ProdListMap 
 }
 
 // unless you want to update the Guests field don't call that function again

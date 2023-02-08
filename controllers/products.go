@@ -1,51 +1,51 @@
 package controllers
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"strings"
+// import (
+// 	"encoding/json"
+// 	"fmt"
+// 	"net/http"
+// 	"strings"
 
-	"github.com/api/models"
-)
+// 	"github.com/api/models"
+// )
 
-func NewProduct(w http.ResponseWriter, r *http.Request) {
-	var product models.Product
+// func NewProduct(w http.ResponseWriter, r *http.Request) {
+// 	var product models.Product
 
-	json.NewDecoder(r.Body).Decode(&product)
+// 	json.NewDecoder(r.Body).Decode(&product)
 
-	if err := models.InsertProduct(product, product.ProductList); err != nil {
-		message := strings.Split(err.Error(), " ")
+// 	if err := models.InsertProduct(product, product.ProductList); err != nil {
+// 		message := strings.Split(err.Error(), " ")
 
-		if message[1] == "duplicate" && message[2] == "key" {
-			http.Error(w, "Product Already Registered", http.StatusAlreadyReported)
-			return
-		}
+// 		if message[1] == "duplicate" && message[2] == "key" {
+// 			http.Error(w, "Product Already Registered", http.StatusAlreadyReported)
+// 			return
+// 		}
 
-		http.Error(w, "Not Know Error", http.StatusConflict)
-		fmt.Println(err)
-		return
-	}
+// 		http.Error(w, "Not Know Error", http.StatusConflict)
+// 		fmt.Println(err)
+// 		return
+// 	}
 
-	w.WriteHeader(http.StatusCreated)
-}
+// 	w.WriteHeader(http.StatusCreated)
+// }
 
-func UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	var both models.UpdatingProduct
+// func UpdateProduct(w http.ResponseWriter, r *http.Request) {
+// 	var both models.UpdatingProduct
 
-	json.NewDecoder(r.Body).Decode(&both)
+// 	json.NewDecoder(r.Body).Decode(&both)
 
-	if both.Old.ProductList.Name == "" || both.Old.ProductList.Room == 0 {
-		http.Error(w, "Missing product_list information", http.StatusBadRequest)
-		return
-	}
+// 	if both.Old.ProductList.Name == "" || both.Old.ProductList.Room == 0 {
+// 		http.Error(w, "Missing product_list information", http.StatusBadRequest)
+// 		return
+// 	}
 
-	if err := models.UpdateProduct(both, both.Old.ProductList); err != nil {
-		http.Error(w, "Unknow error", http.StatusConflict)
-		message := strings.Split(err.Error(), " ")
-		fmt.Println(message)
-		return
-	}
+// 	if err := models.UpdateProduct(both, both.Old.ProductList); err != nil {
+// 		http.Error(w, "Unknow error", http.StatusConflict)
+// 		message := strings.Split(err.Error(), " ")
+// 		fmt.Println(message)
+// 		return
+// 	}
 
-	w.WriteHeader(http.StatusAccepted)
-}
+// 	w.WriteHeader(http.StatusAccepted)
+// }
