@@ -12,7 +12,7 @@ To make login send a http POST request with the same JSON as the one that you sh
 it should only contain the user's password and email. This operation will create a user session if everything ocurrs correctly,
 so don't forget to add the session cookie named "_SecurePS" that latter will be used for every operation on the API.
 this endpoint will return a series of informations, if everything have been done correctly, of couse, so beyond the session cookie
-it also returs a JSON informing the user credentials as well as the room that hi owns (for now it dosen't contain a loot that will be implemented latter on).
+it also returs a JSON informing the user credentials as well as the room that hi owns (for now it dosen't contain a lot of things that will be implemented latter on).
 
 There is a example of how a user JSON should be on the directory: "JSON_examples/user/login.JSON"
 
