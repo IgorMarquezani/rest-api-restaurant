@@ -1,4 +1,4 @@
-package controllers
+package users 
 
 import (
 	"encoding/json"
@@ -12,8 +12,9 @@ import (
 )
 
 type Login struct {
-	user    models.User
-	session models.UserSession
+	user     models.User
+  userJson models.User
+	session  models.UserSession
 }
 
 func (l *Login) setSessionCookie(w http.ResponseWriter) {
@@ -29,10 +30,11 @@ func (l *Login) setSessionCookie(w http.ResponseWriter) {
 func (l *Login) newSession() {
 	var ok bool
 	if l.user.Room.Owner == 0 {
-		l.user.Room = models.SelectRoom(l.user.Id)
+		l.user.Room = models.RoomByItsOwner(l.user.Id)
 	}
 
 	if l.session, ok = models.ThereIsSession(l.user); !ok {
+  // maybe this should be implemented as a procedure on Postgres
 	again:
 		var hash string = string(utils.RandomByteArray())
 		if _, finded := models.SessionBySecurePS([]byte(hash)); finded {
@@ -52,16 +54,15 @@ func (l *Login) newSession() {
 }
 
 func (l Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var userJson models.User
-	json.NewDecoder(r.Body).Decode(&userJson)
-	l.user = models.SelectUser(userJson.Email)
+	json.NewDecoder(r.Body).Decode(&l.userJson)
+	l.user = models.SelectUser(l.userJson.Email)
 
 	if l.user.Email == "" {
 		http.Error(w, "E-mail not registered", http.StatusUnauthorized)
 		return
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(l.user.Passwd), []byte(userJson.Passwd))
+	err := bcrypt.CompareHashAndPassword([]byte(l.user.Passwd), []byte(l.userJson.Passwd))
 	if err != nil {
 		http.Error(w, "Incompatible password", http.StatusUnauthorized)
 		return
@@ -69,7 +70,7 @@ func (l Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	l.newSession()
 	l.setSessionCookie(w)
-	l.user.Id = 0
+  l.user.ClearCriticalInfo()
 
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(l.user)

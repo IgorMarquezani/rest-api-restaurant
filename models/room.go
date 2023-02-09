@@ -11,17 +11,20 @@ type Room struct {
 	ProductsList ProdListMap
 }
 
-// unless you want to update the Guests field don't call that function again
-// instead of this, acess the struct field named "Guests"
+/* Don't ever call this function without filling the Id field
+unless you want to update the Guests field don't call that function again
+instead of this, acess the struct field named "Guests" */
 func (r *Room) FindGuests() guestMap {
 	var db = database.GetConnection()
 
 	query, err := db.Prepare(database.SelectRoomGuests)
+  defer query.Close()
 	if err != nil {
 		panic(err)
 	}
 
 	result, err := query.Query(r.Id)
+  defer result.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +41,42 @@ func (r *Room) FindGuests() guestMap {
 	return r.Guests
 }
 
-func SelectRoom(owner int) Room {
+func (r *Room) IsOwner(user User) bool {
+  if r.Owner == user.Id {
+    return true
+  }
+
+  return false
+}
+
+/* 
+For guarantee that no other guest has been added,
+call the FindeGuests() function before using this specific one */
+func (r *Room) GuestPermission(user User) int {
+  if r.Guests == nil {
+    r.FindGuests()
+  }
+
+  if !r.IsGuest(user) {
+    return 0
+  }
+
+  return SelectGuestPermission(user.Id, r.Id)
+}
+
+func (r *Room) IsGuest(user User) bool {
+  if r.Guests == nil {
+    r.FindGuests()
+  }
+
+  if r.Guests[user.Email].Id != 0 {
+    return true
+  }
+
+  return false
+}
+
+func RoomByItsOwner(owner int) Room {
 	var room Room
 	var db = database.GetConnection()
 
@@ -55,10 +93,10 @@ func SelectRoom(owner int) Room {
 	return room
 }
 
-func RoomById(id int) Room {
+func RoomByItsId(id int) Room {
 	var room Room
-	room.Guests = make(guestMap)
 	var db = database.GetConnection()
+	room.Guests = make(guestMap)
 
 	search, err := db.Query(database.SelectRoomById, id)
 	if err != nil {

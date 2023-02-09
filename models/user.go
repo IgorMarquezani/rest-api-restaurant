@@ -19,6 +19,11 @@ type User struct {
 	Session UserSession
 }
 
+func (u *User) ClearCriticalInfo() {
+  u.Id = 0
+  u.Passwd = ""
+}
+
 func InitUserByRoom(room int) User {
 	var u User
 	var db = database.GetConnection()

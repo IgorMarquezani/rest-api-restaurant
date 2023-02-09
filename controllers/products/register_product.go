@@ -1,10 +1,11 @@
-package controllers
+package products 
 
 import (
 	"encoding/json"
 	"net/http"
 	"strings"
 
+	"github.com/api/controllers"
 	"github.com/api/models"
 )
 
@@ -15,28 +16,25 @@ type RegisterProduct struct {
 }
 
 func (rp RegisterProduct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var err, user = verifySessionCookie(r)
+	var err, user = controllers.VerifySessionCookie(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	user.Room = models.SelectRoom(user.Id)
-	user.Room.FindGuests()
+	user.Room = models.RoomByItsOwner(user.Id)
 
 	json.NewDecoder(r.Body).Decode(&rp.product)
-	rp.productList.Name = rp.product.ListName
-	rp.productList.Room = rp.product.ListRoom
-	rp.jsonRoom = models.RoomById(rp.product.ListRoom)
+	rp.jsonRoom = models.RoomByItsId(rp.product.ListRoom)
 	rp.jsonRoom.FindGuests()
 
-	if user.Room.Id != rp.jsonRoom.Id {
-		if rp.jsonRoom.Guests[user.Email].Id == 0 {
+	if !rp.jsonRoom.IsOwner(user) {
+		if !rp.jsonRoom.IsGuest(user) {
 			http.Error(w, "You are not a guest", http.StatusBadRequest)
 			return
 		}
-
-		http.Error(w, "You are not the owner of that room", http.StatusBadRequest)
-		return
 	}
+
+	rp.productList.Name = rp.product.ListName
+	rp.productList.Room = rp.product.ListRoom
 
 	if err := models.InsertProduct(rp.product, rp.productList); err != nil {
 		message := strings.Split(err.Error(), " ")
@@ -45,9 +43,9 @@ func (rp RegisterProduct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Error(w, "Unknow error", http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusCreated)
 }

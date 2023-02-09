@@ -4,22 +4,25 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/api/controllers"
+	"github.com/api/controllers/users"
+	"github.com/api/controllers/product_list"
+	"github.com/api/controllers/products"
 	"github.com/api/middleware"
 	"github.com/gorilla/mux"
 )
 
 func UserRoutes(r *mux.Router) {
-	r.Handle("/api/user/register", controllers.Register{}).Methods("Post")
-	r.Handle("/api/user/login", controllers.Login{}).Methods("Post")
+	r.Handle("/api/user/register", users.Register{}).Methods("Post")
+	r.Handle("/api/user/login", users.Login{}).Methods("Post")
 }
 
 func ProdListRoutes(r *mux.Router) {
-	r.Handle("/api/product_list/register", controllers.RegisterList{}).Methods("Post")
+	r.Handle("/api/product_list/register",
+		prodlist.RegisterList{}).Methods("Post")
 }
 
 func ProductsRoutes(r *mux.Router) {
-	r.Handle("/api/product/register", controllers.RegisterProduct{}).Methods("Post")
+	r.Handle("/api/product/register", products.RegisterProduct{}).Methods("Post")
 }
 
 func HandleRequest() {

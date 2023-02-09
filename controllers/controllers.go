@@ -7,7 +7,7 @@ import (
 	"github.com/api/utils"
 )
 
-func verifySessionCookie(r *http.Request) (error, models.User) {
+func VerifySessionCookie(r *http.Request) (error, models.User) {
 	cookiePS, err := r.Cookie("_SecurePS")
 	if err != nil {
 		panic(err)
