@@ -5,7 +5,7 @@ To create a new user send a http POST request containing a JSON that especifies 
 
 There is a example of how a user JSON should be on the directory "JSON_examples/user/register.JSON"
 
-endpoint: localhost:8000/api/user/register
+endpoint: localhost:6000/api/user/register
 
 # User Login:
 To make login send a http POST request with the same JSON as the one that you should use im Register but,
@@ -16,7 +16,7 @@ it also returs a JSON informing the user credentials as well as the room that hi
 
 There is a example of how a user JSON should be on the directory: "JSON_examples/user/login.JSON"
 
-endpoint: localhost:8000/api/user/login
+endpoint: localhost:6000/api/user/login
 
 FOR NOW, THE API SUPPORTS THE FOLLOWING REQUESTS COMING FROM A GUEST ON THAT ROOM, BUT THE "ROOM" IS A CONCEPT THAT I SHOULD EXPLAIN BETTER IN THE FUTURE,
 FOR KNOW, JUST SEND REQUESTS AS THE OWNER THAT ROOM
@@ -26,11 +26,11 @@ To create a new product list send a http POST request containing a JSON that esp
 
 There is an exemple of how a product list JSON should look like on this directory: JSON_example/product_list/register.JSON
 
-endpoint: localhost:8000/api/product_list/register
+endpoint: localhost:6000/api/product_list/register
 
 # Product Register:
 To create a new product send a http POST request containing a JSON that especifies the product that will be created.
 
 There is an example of how the product JSON should look like on the directory: JSON_examples/products/register.JSON
 
-endpoint: localhost:8000/api/product/register
+endpoint: localhost:6000/api/product/register
