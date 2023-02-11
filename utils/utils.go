@@ -21,30 +21,30 @@ func HashString(str string) string {
 }
 
 func RandomCharacter() byte {
-  var character byte
+	var character byte
 
-  rand.Seed(int64(time.Now().Nanosecond()))
-  for character < 32 || character == '"' {
-    character = byte(rand.Intn(127))
-  }
-  return character
+	rand.Seed(int64(time.Now().Nanosecond()))
+	for character < 32 || character == '"' {
+		character = byte(rand.Intn(127))
+	}
+	return character
 }
 
 func RandomByteArray() []byte {
-  length := rand.Int31n(60)
-  array := make([]byte, length)
+	length := rand.Int31n(60)
+	array := make([]byte, length)
 
-  for i := 0; i < int(length); i++ {
-    array[i] = RandomCharacter()
-  } 
-  return array
+	for i := 0; i < int(length); i++ {
+		array[i] = RandomCharacter()
+	}
+	return array
 }
 
 func Invert(s string) string {
-  var newStr []byte 
+	var newStr []byte
 
-  for i := len(s)-1; i > -1; i-- {
-    newStr = append(newStr, s[i])
-  }
-  return string(newStr) 
+	for i := len(s) - 1; i > -1; i-- {
+		newStr = append(newStr, s[i])
+	}
+	return string(newStr)
 }
