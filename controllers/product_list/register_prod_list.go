@@ -10,8 +10,8 @@ import (
 )
 
 type RegisterList struct {
-  productList models.ProductList
-  jsonRoom    models.Room
+	productList models.ProductList
+	jsonRoom    models.Room
 }
 
 func (rl RegisterList) ServeHTTP(w http.ResponseWriter, r *http.Request) {

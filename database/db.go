@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	_ "strconv"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -18,9 +19,11 @@ const (
 
 // QUERYS FOR PRODUCTS
 const (
-	InsertProduct string = "INSERT INTO products (list_name, list_room, name, price, description, image) values ($1, $2, $3, $4, $5, $6);"
-	UpdateProduct string = "update products set name = $1, price = $2, description = $3, image = $4 where list_room = $5 and name = $6;"
-	SelectProduct string = "select * from products where name = $1 and list_room = $2;"
+	InsertProduct        string = "INSERT INTO products (list_name, list_room, name, price, description, image) values ($1, $2, $3, $4, $5, $6);"
+	UpdateProduct        string = "update products set name = $1, price = $2, description = $3, image = $4 where list_room = $5 and name = $6;"
+	DeleteProduct        string = "delete from products where name = $1 and list_room = $2;"
+	SelectProduct        string = "select * from products where name = $1 and list_room = $2;"
+	SelectProductsByList string = "select (products.*) from products join product_list on products.list_name = product_list.name and products.list_room = product_list.origin_room where product_list.name = $1 and product_list.origin_room = $2;"
 )
 
 // QUERYS FOR ROOMS
@@ -48,9 +51,10 @@ const (
 	SelectGuestByUserAndRoom string = "select * from guests where user_id = $1 and inviting_room = $2"
 )
 
-// MISCELLANEOUS
+// QUERY FOR PRODUCTS LIST
 const (
 	InsertProductList string = "insert into product_list values ($1, $2);"
+	SelectProductList string = "select * from product_list where name = $1 and origin_room = $2;"
 )
 
 // database variables
@@ -58,6 +62,16 @@ var (
 	db  *sql.DB
 	err error
 )
+
+func IsDuplicateKeyError(warning string) bool {
+	message := strings.Split(warning, " ")
+
+	if message[1] == "duplicate" && message[2] == "key" {
+		return true
+	}
+
+	return false
+}
 
 func NewConnection() {
 	connection := "host=localhost user=root dbname=restaurant password=bloodyroots port=5432 sslmode=disable "

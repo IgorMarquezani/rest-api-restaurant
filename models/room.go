@@ -5,26 +5,29 @@ import (
 )
 
 type Room struct {
-	Id           int `json:"id"`
-	Owner        int `json:"owner"`
-	Guests       guestMap
-	ProductsList ProdListMap
+	Id            int `json:"id"`
+	Owner         int `json:"owner"`
+	Guests        guestMap
+	ProductsLists ProductListMap
 }
 
-/* Don't ever call this function without filling the Id field
+/*
+	Don't ever call this function without filling the Id field
+
 unless you want to update the Guests field don't call that function again
-instead of this, acess the struct field named "Guests" */
+instead of this, acess the struct field named "Guests"
+*/
 func (r *Room) FindGuests() guestMap {
 	var db = database.GetConnection()
 
 	query, err := db.Prepare(database.SelectRoomGuests)
-  defer query.Close()
+	defer query.Close()
 	if err != nil {
 		panic(err)
 	}
 
 	result, err := query.Query(r.Id)
-  defer result.Close()
+	defer result.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -42,38 +45,39 @@ func (r *Room) FindGuests() guestMap {
 }
 
 func (r *Room) IsOwner(user User) bool {
-  if r.Owner == user.Id {
-    return true
-  }
+	if r.Owner == user.Id {
+		return true
+	}
 
-  return false
+	return false
 }
 
-/* 
+/*
 For guarantee that no other guest has been added,
-call the FindeGuests() function before using this specific one */
+call the FindeGuests() function before using this specific one
+*/
 func (r *Room) GuestPermission(user User) int {
-  if r.Guests == nil {
-    r.FindGuests()
-  }
+	if r.Guests == nil {
+		r.FindGuests()
+	}
 
-  if !r.IsGuest(user) {
-    return 0
-  }
+	if !r.IsGuest(user) {
+		return 0
+	}
 
-  return SelectGuestPermission(user.Id, r.Id)
+	return SelectGuestPermission(user.Id, r.Id)
 }
 
 func (r *Room) IsGuest(user User) bool {
-  if r.Guests == nil {
-    r.FindGuests()
-  }
+	if r.Guests == nil {
+		r.FindGuests()
+	}
 
-  if r.Guests[user.Email].Id != 0 {
-    return true
-  }
+	if r.Guests[user.Email].Id != 0 {
+		return true
+	}
 
-  return false
+	return false
 }
 
 func RoomByItsOwner(owner int) Room {

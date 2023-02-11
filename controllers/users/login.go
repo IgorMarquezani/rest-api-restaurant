@@ -1,4 +1,4 @@
-package users 
+package users
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 
 type Login struct {
 	user     models.User
-  userJson models.User
+	userJson models.User
 	session  models.UserSession
 }
 
@@ -34,7 +34,7 @@ func (l *Login) newSession() {
 	}
 
 	if l.session, ok = models.ThereIsSession(l.user); !ok {
-  // maybe this should be implemented as a procedure on Postgres
+		// maybe this should be implemented as a procedure on Postgres
 	again:
 		var hash string = string(utils.RandomByteArray())
 		if _, finded := models.SessionBySecurePS([]byte(hash)); finded {
@@ -70,7 +70,7 @@ func (l Login) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	l.newSession()
 	l.setSessionCookie(w)
-  l.user.ClearCriticalInfo()
+	l.user.ClearCriticalInfo()
 
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(l.user)

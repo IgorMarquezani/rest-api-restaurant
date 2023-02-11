@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/api/models"
@@ -8,17 +9,37 @@ import (
 )
 
 func VerifySessionCookie(r *http.Request) (error, models.User) {
+  var user models.User
+
 	cookiePS, err := r.Cookie("_SecurePS")
 	if err != nil {
-		panic(err)
+    return err, user
 	}
 
 	hash := utils.Invert(cookiePS.Value)
 
-	u, err := models.UserByHash(hash)
+	user, err = models.UserBySessionHash(hash)
 	if err != nil {
-		return err, u
+		return err, user
 	}
 
-	return nil, u
+	return nil, user
+}
+
+func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
+  var user models.User
+  var session models.UserSession
+  var ok bool
+
+  err, user := VerifySessionCookie(r)
+  if err != nil {
+    return err, user, session
+  }
+
+  session, ok = models.ThereIsSession(user)
+  if !ok {
+    return errors.New("Please Log in"), user, session
+  }
+
+  return nil, user, session
 }

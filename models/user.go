@@ -20,8 +20,8 @@ type User struct {
 }
 
 func (u *User) ClearCriticalInfo() {
-  u.Id = 0
-  u.Passwd = ""
+	u.Id = 0
+	u.Passwd = ""
 }
 
 func InitUserByRoom(room int) User {
@@ -84,7 +84,7 @@ func InsertUser(u User) error {
 	return err
 }
 
-func UserByHash(hash string) (User, error) {
+func UserBySessionHash(hash string) (User, error) {
 	var u User
 	db := database.GetConnection()
 
@@ -99,5 +99,5 @@ func UserByHash(hash string) (User, error) {
 		return u, nil
 	}
 
-	return u, fmt.Errorf("No such session with this hash")
+	return u, fmt.Errorf("No such session")
 }

@@ -12,17 +12,20 @@ import (
 )
 
 func UserRoutes(r *mux.Router) {
-	r.Handle("/api/user/register", users.Register{}).Methods("Post")
-	r.Handle("/api/user/login", users.Login{}).Methods("Post")
+	r.Handle("/api/user/register", users.Register{}).Methods("POST")
+	r.Handle("/api/user/login", users.Login{}).Methods("POST")
 }
 
 func ProdListRoutes(r *mux.Router) {
 	r.Handle("/api/product_list/register",
-		prodlist.RegisterList{}).Methods("Post")
+		prodlist.RegisterList{}).Methods("POST")
 }
 
 func ProductsRoutes(r *mux.Router) {
-	r.Handle("/api/product/register", products.RegisterProduct{}).Methods("Post")
+	r.Handle("/api/product/register",
+    products.RegisterProduct{}).Methods("POST")
+  r.Handle("/api/product/update",
+    products.UpdateProduct{}).Methods("PUT")
 }
 
 func HandleRequest() {
