@@ -123,28 +123,6 @@ CREATE TABLE products (
    primary key (name, list_room)
 );
 
-create or replace function auto_set_tab_number()
-returns trigger as $$
-declare
-  values integer[] = array(select (number) from tabs where room = new.room); 
-  length integer = array_length(tab_numbers, 1);
-  i int = 1;
-begin
-  if new.number is null then 
-    while i < length loop
-      if values[i+1] != values[i]+1 then
-        new.number := values[i]+1;
-        exit;
-      end if;
-        i = i+1;
-    end loop;
-  end if;
-
-  new.number := ((select max(number) from tabs where room = new.room)+1);
-  return new;
-end;
-$$ language plpgsql;
-
 CREATE TABLE tabs (
 	 number INTEGER, 
    room INTEGER,
@@ -153,11 +131,6 @@ CREATE TABLE tabs (
 	 PRIMARY KEY (room, number),
    FOREIGN KEY (room) REFERENCES rooms (id)
 );
-
-create or replace trigger auto_set_tab_number_trigger
-after insert on tabs
-for each row 
-execute procedure auto_set_tab_number();
 
 create table requests (
   tab_room integer not null,

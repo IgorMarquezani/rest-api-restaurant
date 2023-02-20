@@ -6,6 +6,7 @@ import (
 
 	"github.com/api/controllers/product_list"
 	"github.com/api/controllers/products"
+	"github.com/api/controllers/tabs"
 	"github.com/api/controllers/users"
 	"github.com/api/middleware"
 	"github.com/gorilla/mux"
@@ -14,6 +15,7 @@ import (
 func UserRoutes(r *mux.Router) {
 	r.Handle("/api/user/register", users.Register{}).Methods("POST")
 	r.Handle("/api/user/login", users.Login{}).Methods("POST")
+  r.Handle("/api/user/auth", users.Authenticate{}).Methods("POST")
 }
 
 func ProdListRoutes(r *mux.Router) {
@@ -28,12 +30,18 @@ func ProductsRoutes(r *mux.Router) {
 		products.UpdateProduct{}).Methods("PUT")
 }
 
+func TabsRoutes(r *mux.Router) {
+  r.Handle("/api/tab/register",
+    tabs.TabRegister{}).Methods("POST")
+}
+
 func HandleRequest() {
 	r := mux.NewRouter()
 	r.Use(middleware.SetAllContentType)
 	UserRoutes(r)
 	ProdListRoutes(r)
 	ProductsRoutes(r)
+  TabsRoutes(r)
 
 	log.Fatal(http.ListenAndServe(":6000", r))
 }

@@ -57,6 +57,13 @@ const (
 	SelectProductList string = "select * from product_list where name = $1 and origin_room = $2;"
 )
 
+// QUERY FOR TABS
+const (
+  SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
+  InsertTab        string = "insert into tabs (number, room) values ($1, $2)"
+  SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
+)
+
 // database variables
 var (
 	db  *sql.DB

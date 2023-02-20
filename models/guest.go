@@ -2,7 +2,7 @@ package models
 
 import "github.com/api/database"
 
-type guestMap map[string]User
+type GuestMap map[string]User
 
 type Guest struct {
 	InvintingRoom   int `json:"invinting_room"`

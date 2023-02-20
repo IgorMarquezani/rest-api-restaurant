@@ -14,9 +14,10 @@ type User struct {
 	Email   string `json:"email"`
 	Passwd  string `json:"passwd"`
 	Img     []byte `json:"img"`
+
 	Room    Room
+  ActiveRoom Room
 	Invites []Invite
-	Session UserSession
 }
 
 func (u *User) ClearCriticalInfo() {
@@ -95,7 +96,6 @@ func UserBySessionHash(hash string) (User, error) {
 
 	if search.Next() {
 		search.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
-		u.Session, _ = ThereIsSession(u)
 		return u, nil
 	}
 

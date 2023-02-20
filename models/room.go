@@ -7,17 +7,18 @@ import (
 type Room struct {
 	Id            int `json:"id"`
 	Owner         int `json:"owner"`
-	Guests        guestMap
+
+	Guests        GuestMap
 	ProductsLists ProductListMap
+  Tabs []Tab
 }
 
 /*
-	Don't ever call this function without filling the Id field
-
+Don't ever call this function without filling the Id field
 unless you want to update the Guests field don't call that function again
 instead of this, acess the struct field named "Guests"
 */
-func (r *Room) FindGuests() guestMap {
+func (r *Room) FindGuests() GuestMap {
 	var db = database.GetConnection()
 
 	query, err := db.Prepare(database.SelectRoomGuests)
@@ -100,7 +101,7 @@ func RoomByItsOwner(owner int) Room {
 func RoomByItsId(id int) Room {
 	var room Room
 	var db = database.GetConnection()
-	room.Guests = make(guestMap)
+	room.Guests = make(GuestMap)
 
 	search, err := db.Query(database.SelectRoomById, id)
 	if err != nil {

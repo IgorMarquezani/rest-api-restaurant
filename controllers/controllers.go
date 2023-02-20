@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/api/models"
@@ -17,6 +18,7 @@ func VerifySessionCookie(r *http.Request) (error, models.User) {
 	}
 
 	hash := utils.Invert(cookiePS.Value)
+  fmt.Println(hash, "TERMINACAO")
 
 	user, err = models.UserBySessionHash(hash)
 	if err != nil {

@@ -7,6 +7,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var nonValidCookieValue []byte = []byte{'"', ',', ';', '\\'}
+
+func IsInvalidCookieValue(char byte) bool {
+  for i := 0; i < len(nonValidCookieValue); i++ {
+    if char == nonValidCookieValue[i] {
+      return false
+    }
+  }
+
+  return false
+}
+
 func HashString(str string) string {
 	if str == "" {
 		panic("String is empty")
@@ -24,7 +36,8 @@ func RandomCharacter() byte {
 	var character byte
 
 	rand.Seed(int64(time.Now().Nanosecond()))
-	for character < 32 || character == '"' {
+
+	for character < 33 || character == '"' {
 		character = byte(rand.Intn(127))
 	}
 	return character
@@ -35,13 +48,20 @@ func RandomByteArray() []byte {
 	array := make([]byte, length)
 
 	for i := 0; i < int(length); i++ {
-		array[i] = RandomCharacter()
+    random := RandomCharacter()
+
+    if IsInvalidCookieValue(random) {
+      i--
+      continue
+    }
+
+		array[i] = random
 	}
 	return array
 }
 
 func Invert(s string) string {
-	var newStr []byte
+  newStr := make([]byte, len(s))
 
 	for i := len(s) - 1; i > -1; i-- {
 		newStr = append(newStr, s[i])

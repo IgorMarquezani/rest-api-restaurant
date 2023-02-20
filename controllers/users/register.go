@@ -2,27 +2,36 @@ package users
 
 import (
 	"encoding/json"
-	"github.com/api/models"
 	"net/http"
-	"strings"
+	"net/mail"
+
+	"github.com/api/database"
+	"github.com/api/models"
 )
 
 type Register struct {
 	user models.User
 }
 
-func (Re Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	json.NewDecoder(r.Body).Decode(&Re.user)
+func (re Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	json.NewDecoder(r.Body).Decode(&re.user)
 
-	if err := models.InsertUser(Re.user); err != nil {
-		message := strings.Split(err.Error(), " ")
+  _, err := mail.ParseAddress(re.user.Email)
+  if err != nil {
+    http.Error(w, "Not valid E-mail format", http.StatusBadRequest)
+    return
+  }
 
-		if message[1] == "duplicate" || message[2] == "key" {
+	if err := models.InsertUser(re.user); err != nil {
+    if database.IsDuplicateKeyError(err.Error()) {
 			http.Error(w, "E-mail already in use", http.StatusAlreadyReported)
 			return
-		}
-		http.Error(w, "Unknow error", http.StatusInternalServerError)
+    }
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+    return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+  json.NewEncoder(w).Encode(re.user)
 }
