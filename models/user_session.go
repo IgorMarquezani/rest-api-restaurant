@@ -17,14 +17,16 @@ func StartSession(u User, securePS string) (UserSession, error) {
 	var session UserSession
 	var db = database.GetConnection()
 
-	search, err := db.Query(database.InsertNewSession, u.Id, u.Room.Id, securePS)
-	defer search.Close()
+	insert, err := db.Query(database.InsertNewSession, u.Id, u.Room.Id, securePS)
+	defer insert.Close()
 	if err != nil {
 		return session, err
 	}
 
-	if search.Next() {
-		search.Scan(&session.Who, session.ActiveRoom, session.SecurePS)
+  // search, err := db.Query(database.SelectSessionByHash, securePS)
+
+	if insert.Next() {
+		insert.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
 	}
 
 	return session, nil
