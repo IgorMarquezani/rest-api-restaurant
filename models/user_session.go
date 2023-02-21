@@ -23,10 +23,13 @@ func StartSession(u User, securePS string) (UserSession, error) {
 		return session, err
 	}
 
-  // search, err := db.Query(database.SelectSessionByHash, securePS)
+  search, err := db.Query(database.SelectSessionByHash, securePS)
+  if err != nil {
+    return session, err
+  }
 
-	if insert.Next() {
-		insert.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
+	if search.Next() {
+		search.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
 	}
 
 	return session, nil
