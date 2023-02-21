@@ -16,7 +16,7 @@ type User struct {
 	Img     []byte `json:"img"`
 
 	Room    Room
-  ActiveRoom Room
+  RoomsAsGuest []Room
 	Invites []Invite
 }
 

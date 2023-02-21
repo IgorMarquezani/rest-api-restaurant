@@ -9,7 +9,7 @@ type Room struct {
 	Owner         int `json:"owner"`
 
 	Guests        GuestMap
-	ProductsLists ProductListMap
+	ProductsList ProductListMap
   Tabs []Tab
 }
 
@@ -43,6 +43,20 @@ func (r *Room) FindGuests() GuestMap {
 	}
 
 	return r.Guests
+}
+
+func (r *Room) FindTabs() {
+  var db = database.GetConnection()
+
+  search, err := db.Query(database.SelectTabsInRoom, r.Id)
+  if err != nil {
+    panic(err)
+  }
+
+  for i := 0; search.Next(); i++ {
+    r.Tabs = append(r.Tabs, Tab{})
+    search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded)
+  }
 }
 
 func (r *Room) IsOwner(user User) bool {

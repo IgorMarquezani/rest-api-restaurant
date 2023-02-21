@@ -37,17 +37,16 @@ func RandomCharacter() byte {
 
 	rand.Seed(int64(time.Now().Nanosecond()))
 
-	for character < 33 || character == '"' {
-		character = byte(rand.Intn(127))
+	for character < 65 || character > 90 && character < 97 {
+		character = byte(rand.Intn(123))
 	}
 	return character
 }
 
 func RandomByteArray() []byte {
-	length := rand.Int31n(60)
-	array := make([]byte, length)
+	array := make([]byte, 40)
 
-	for i := 0; i < int(length); i++ {
+	for i := 0; i < int(40); i++ {
     random := RandomCharacter()
 
     if IsInvalidCookieValue(random) {

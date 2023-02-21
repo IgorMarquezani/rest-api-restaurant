@@ -10,6 +10,8 @@ type Tab struct {
   RoomId int `json:"room"`  
 	PayValue  float64 `json:"pay_value"`
 	Maded string  `json:"time_maded"`
+
+  Requests []Request `json:"requests"`
 }
 
 func NextTabNumberInRoom(room int) int {
