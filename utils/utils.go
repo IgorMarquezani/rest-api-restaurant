@@ -12,7 +12,7 @@ var nonValidCookieValue []byte = []byte{'"', ',', ';', '\\'}
 func IsInvalidCookieValue(char byte) bool {
   for i := 0; i < len(nonValidCookieValue); i++ {
     if char == nonValidCookieValue[i] {
-      return false
+      return true 
     }
   }
 
@@ -61,7 +61,7 @@ func RandomByteArray() []byte {
 }
 
 func Invert(s string) string {
-  newStr := make([]byte, len(s))
+  var newStr []byte
 
 	for i := len(s) - 1; i > -1; i-- {
 		newStr = append(newStr, s[i])

@@ -9,8 +9,8 @@ import (
 
 type UserSession struct {
 	Who        int    `json:"who"`
-	SecurePS   string `json:"_SecurePS"`
 	ActiveRoom int    `json:"active_room"`
+	SecurePS   string `json:"_SecurePS"`
 }
 
 func StartSession(u User, securePS string) (UserSession, error) {
