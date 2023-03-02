@@ -2,7 +2,8 @@ API Rest
 
 # Starting: 
 For starting the application run the bash script in "container-files", called "start.sh" and pass the argument "start". Any question
-about the script functionalities pass the argument "help" in it.
+about the script functionalities pass the argument "help" in it. If you wanna run the front-end as well, you can find it here: 
+https://github.com/IgorMarquezani/front-end-restaurant
 
 # User Register:
 To create a new user send a http POST request containing a JSON that especifies the user that should be created.
