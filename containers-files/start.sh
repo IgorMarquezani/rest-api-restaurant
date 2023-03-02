@@ -9,10 +9,10 @@ elif [[ $1 == "reset" ]]; then
     container=$(docker image ls | sed '2,800 ! d' | sed -n {"$i p"} | awk {'print $1'} )
     if [[ $container == "postgres" || $container == "dpage/pgadmin4" ]]; then
       docker image rmi -f $container
-      $i--
+      $i=$(($i-1))
     fi
   done
-  docker volume rm $(docker volume ls -q)
+  docker volume rm $(docker volume ls -q) 2> /dev/null 
 elif [[ $1 == "help" ]]; then
   if [[ $LANG == "pt_BR.UTF-8" ]]; then
     echo "help:  show this message"
