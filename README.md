@@ -1,12 +1,8 @@
 API Rest
 
 # Starting: 
-First of all you will need to have Postgres on your machine as well as Golang and Docker.<br>
-Enter in the directory "container_files" and the use the command sudo docker-compose build and then sudo docker-compose up,
-but you should check if the Postgres isn't running on your machine already, if it is and is using the same port as the
-Postgres that will be created on a container by Docker as especified on: container_files/docker-compose.yml, you should disable the Postgres
-already running on your Machine.<br>
-end finaly go to the root directory of the project and write go run main.go.
+For starting the application run the bash script in "container-files", called "start.sh" and pass the argument "start". Any question
+about the script functionalities pass the argument "help" in it.
 
 # User Register:
 To create a new user send a http POST request containing a JSON that especifies the user that should be created.
@@ -27,7 +23,7 @@ There is a example of how a user JSON should be on the directory: "JSON_examples
 endpoint: localhost:6000/api/user/login
 
 FOR NOW, THE API SUPPORTS THE FOLLOWING REQUESTS COMING FROM A GUEST ON THAT ROOM, BUT THE "ROOM" IS A CONCEPT THAT I SHOULD EXPLAIN BETTER IN THE FUTURE,
-FOR KNOW, JUST SEND REQUESTS AS THE OWNER THAT ROOM
+FOR NOW, JUST SEND REQUESTS AS THE OWNER THAT ROOM
 
 # Product List Register:
 To create a new product list send a http POST request containing a JSON that especifies the product list that should be create.
