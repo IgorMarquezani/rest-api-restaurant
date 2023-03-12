@@ -2,27 +2,82 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/api/database"
 	"github.com/api/utils"
 )
 
-type User struct {
-	Id      int    `json:"id"`
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Passwd  string `json:"passwd"`
-	Img     []byte `json:"img"`
+type UserRegister struct {
+	User    User   `json:"user"`
+	Confirm string `json:"confirm_passwd"`
+}
 
-	Room    Room
-  RoomsAsGuest []Room
-	Invites []Invite
+func (u *UserRegister) ThereIsPasswdError() error {
+	if u.User.Passwd == "" || u.Confirm == "" {
+		return errors.New("One of the strings is empty")
+	}
+
+	if u.User.Passwd != u.Confirm {
+		return errors.New("Different passwords")
+	}
+
+	return nil
+}
+
+type User struct {
+	Id     int    `json:"id"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Passwd string `json:"passwd"`
+	Img    []byte `json:"img"`
+
+	Room         Room
+	RoomsAsGuest []Room
+	Invites      []Invite
 }
 
 func (u *User) ClearCriticalInfo() {
 	u.Id = 0
 	u.Passwd = ""
+}
+
+func (u *User) UserInvites() []Invite {
+	var db = database.GetConnection()
+
+	search, err := db.Query(database.SearchInviteByTarget, u.Id)
+	if err != nil {
+		panic(err)
+	}
+
+	u.Invites = make([]Invite, 0)
+
+	for search.Next() {
+		invite := Invite{}
+		search.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status)
+		u.Invites = append(u.Invites, invite)
+	}
+
+	return u.Invites
+}
+
+func (u *User) AcceptedRooms() []Room {
+	var db = database.GetConnection()
+
+	search, err := db.Query(database.SelectGuestRooms, u.Id)
+	if err != nil {
+		panic(err)
+	}
+
+	u.RoomsAsGuest = make([]Room, 0)
+	for search.Next() {
+		room := Room{}
+		search.Scan(&room.Id, &room.Owner)
+		u.RoomsAsGuest = append(u.RoomsAsGuest, room)
+	}
+
+	return u.RoomsAsGuest
 }
 
 func InitUserByRoom(room int) User {

@@ -5,12 +5,12 @@ import (
 )
 
 type Room struct {
-	Id            int `json:"id"`
-	Owner         int `json:"owner"`
+	Id    int `json:"id"`
+	Owner int `json:"owner"`
 
-	Guests        GuestMap
+	Guests       GuestMap
 	ProductsList ProductListMap
-  Tabs []Tab
+	Tabs         []Tab
 }
 
 /*
@@ -33,30 +33,62 @@ func (r *Room) FindGuests() GuestMap {
 		panic(err)
 	}
 
+	if r.Guests == nil {
+		r.Guests = make(GuestMap)
+	}
+
 	for result.Next() {
 		user := User{}
 		if err := result.Scan(&user.Id, &user.Name, &user.Email, &user.Passwd, &user.Img); err != nil {
 			panic(err)
 		}
-
+		user.ClearCriticalInfo()
 		r.Guests[user.Email] = user
 	}
 
 	return r.Guests
 }
 
-func (r *Room) FindTabs() {
-  var db = database.GetConnection()
+func (r *Room) FindProductsLists() ProductListMap {
+	var db = database.GetConnection()
 
-  search, err := db.Query(database.SelectTabsInRoom, r.Id)
-  if err != nil {
-    panic(err)
-  }
+	r.ProductsList = make(ProductListMap)
 
-  for i := 0; search.Next(); i++ {
-    r.Tabs = append(r.Tabs, Tab{})
-    search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded)
-  }
+	search, err := db.Query(database.SelectProductListByRoom, r.Id)
+	if err != nil {
+		panic(err)
+	}
+
+	for search.Next() {
+		list := ProductList{}
+		search.Scan(&list.Name, &list.Room)
+		r.ProductsList[list.Name] = list
+	}
+
+	return r.ProductsList
+}
+
+func (r *Room) FindTabs() []Tab {
+	var db = database.GetConnection()
+	r.Tabs = make([]Tab, 0)
+
+	search, err := db.Query(database.SelectTabsInRoom, r.Id)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; search.Next(); i++ {
+		r.Tabs = append(r.Tabs, Tab{})
+		search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded)
+	}
+
+	return r.Tabs
+}
+
+func (r *Room) FindTabsRequests() {
+	for i := 0; i < len(r.Tabs); i++ {
+		r.Tabs[i].FindRequests()
+	}
 }
 
 func (r *Room) IsOwner(user User) bool {

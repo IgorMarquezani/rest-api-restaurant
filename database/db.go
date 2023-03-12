@@ -31,6 +31,7 @@ const (
 	SelectRoomByOwner string = "select * from rooms where owner = $1"
 	SelectRoomById    string = "select * from rooms where id=$1"
 	SelectRoomGuests  string = "select (users.*) from users join guests on guests.user_id = users.id join rooms on rooms.id = guests.inviting_room where rooms.id = $1;"
+	SelectGuestRooms  string = "select (rooms.*) from guests join rooms on guests.inviting_room = rooms.id where user_id = $1;"
 )
 
 // QUERY FOR INVITES
@@ -53,15 +54,20 @@ const (
 
 // QUERY FOR PRODUCTS LIST
 const (
-	InsertProductList string = "insert into product_list values ($1, $2);"
-	SelectProductList string = "select * from product_list where name = $1 and origin_room = $2;"
+	InsertProductList       string = "insert into product_list values ($1, $2);"
+	SelectProductList       string = "select * from product_list where name = $1 and origin_room = $2;"
+	SelectProductListByRoom string = "select * from product_list where origin_room = $1;"
 )
 
 // QUERY FOR TABS
 const (
-  SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
-  InsertTab        string = "insert into tabs (number, room) values ($1, $2)"
-  SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
+	SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
+	InsertTab        string = "insert into tabs (number, room) values ($1, $2)"
+	SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
+)
+
+const (
+	SelectRequestsInTab string = "select * from requests where tab_room = $1 and tab_number = $2"
 )
 
 // database variables

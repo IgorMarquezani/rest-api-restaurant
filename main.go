@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-  database.NewConnection()
-  fmt.Println("Initializing API for Fatec project")
-  routes.HandleRequest()  
+	database.NewConnection()
+	fmt.Println("Initializing API for Fatec project")
+	routes.HandleRequest()
 }

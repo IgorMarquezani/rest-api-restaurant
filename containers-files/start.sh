@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $1 == "start" ]]; then
-  docker-compose up -d
+  docker-compose up &
   go run ../main.go
 elif [[ $1 == "reset" ]]; then
   docker-compose down

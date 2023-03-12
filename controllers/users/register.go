@@ -10,28 +10,33 @@ import (
 )
 
 type Register struct {
-	user models.User
+	userRegister models.UserRegister
 }
 
 func (re Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	json.NewDecoder(r.Body).Decode(&re.user)
+	json.NewDecoder(r.Body).Decode(&re.userRegister)
 
-  _, err := mail.ParseAddress(re.user.Email)
-  if err != nil {
-    http.Error(w, "Not valid E-mail format", http.StatusBadRequest)
-    return
-  }
+	_, err := mail.ParseAddress(re.userRegister.User.Email)
+	if err != nil {
+		http.Error(w, "Invalid E-mail format", http.StatusBadRequest)
+		return
+	}
 
-	if err := models.InsertUser(re.user); err != nil {
-    if database.IsDuplicateKeyError(err.Error()) {
+	if err := re.userRegister.ThereIsPasswdError(); err != nil {
+		http.Error(w, "Invalid passwords", http.StatusBadRequest)
+		return
+	}
+
+	if err := models.InsertUser(re.userRegister.User); err != nil {
+		if database.IsDuplicateKeyError(err.Error()) {
 			http.Error(w, "E-mail already in use", http.StatusAlreadyReported)
 			return
-    }
+		}
 
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
-    return
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-  json.NewEncoder(w).Encode(re.user)
+	json.NewEncoder(w).Encode(re.userRegister)
 }

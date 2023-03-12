@@ -14,6 +14,28 @@ type ProductList struct {
 	Products ProductMap
 }
 
+func FindProductsInList(pl ProductList) ProductList {
+	var db = database.GetConnection()
+
+	pl.Products = make(ProductMap)
+
+	search, err := db.Query(database.SelectProductsByList, pl.Name, pl.Room)
+	if err != nil {
+		panic(err)
+	}
+
+	for search.Next() {
+		product := Product{}
+
+		search.Scan(&product.ListName, &product.ListRoom,
+			&product.Name, &product.Price, &product.Description, &product.Image)
+
+		pl.Products[product.Name] = product
+	}
+
+	return pl
+}
+
 func (pl *ProductList) Exists() bool {
 	if pl.Name == "" || pl.Room == 0 {
 		return false

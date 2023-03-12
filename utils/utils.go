@@ -10,13 +10,13 @@ import (
 var nonValidCookieValue []byte = []byte{'"', ',', ';', '\\'}
 
 func IsInvalidCookieValue(char byte) bool {
-  for i := 0; i < len(nonValidCookieValue); i++ {
-    if char == nonValidCookieValue[i] {
-      return true 
-    }
-  }
+	for i := 0; i < len(nonValidCookieValue); i++ {
+		if char == nonValidCookieValue[i] {
+			return true
+		}
+	}
 
-  return false
+	return false
 }
 
 func HashString(str string) string {
@@ -47,12 +47,12 @@ func RandomByteArray() []byte {
 	array := make([]byte, 40)
 
 	for i := 0; i < int(40); i++ {
-    random := RandomCharacter()
+		random := RandomCharacter()
 
-    if IsInvalidCookieValue(random) {
-      i--
-      continue
-    }
+		if IsInvalidCookieValue(random) {
+			i--
+			continue
+		}
 
 		array[i] = random
 	}
@@ -60,7 +60,7 @@ func RandomByteArray() []byte {
 }
 
 func Invert(s string) string {
-  var newStr []byte
+	var newStr []byte
 
 	for i := len(s) - 1; i > -1; i-- {
 		newStr = append(newStr, s[i])

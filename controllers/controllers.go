@@ -10,15 +10,15 @@ import (
 )
 
 func VerifySessionCookie(r *http.Request) (error, models.User) {
-  var user models.User
+	var user models.User
 
 	cookiePS, err := r.Cookie("_SecurePS")
 	if err != nil {
-    return err, user
+		return err, user
 	}
 
 	hash := utils.Invert(cookiePS.Value)
-  fmt.Println(hash, "TERMINACAO")
+	fmt.Println(hash, "TERMINACAO")
 
 	user, err = models.UserBySessionHash(hash)
 	if err != nil {
@@ -29,19 +29,19 @@ func VerifySessionCookie(r *http.Request) (error, models.User) {
 }
 
 func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
-  var user models.User
-  var session models.UserSession
-  var ok bool
+	var user models.User
+	var session models.UserSession
+	var ok bool
 
-  err, user := VerifySessionCookie(r)
-  if err != nil {
-    return err, user, session
-  }
+	err, user := VerifySessionCookie(r)
+	if err != nil {
+		return err, user, session
+	}
 
-  session, ok = models.ThereIsSession(user)
-  if !ok {
-    return errors.New("Please Log in"), user, session
-  }
+	session, ok = models.ThereIsSession(user)
+	if !ok {
+		return errors.New("Please Log in"), user, session
+	}
 
-  return nil, user, session
+	return nil, user, session
 }

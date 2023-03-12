@@ -124,6 +124,7 @@ CREATE TABLE products (
 );
 
 CREATE TABLE tabs (
+   table INTEGER,
 	 number INTEGER, 
    room INTEGER,
    pay_value decimal default 0,
