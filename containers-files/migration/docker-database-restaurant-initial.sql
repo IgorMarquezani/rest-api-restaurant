@@ -128,6 +128,7 @@ CREATE TABLE tabs (
    room INTEGER,
    pay_value decimal default 0,
    time_maded time default current_time,
+   table_number INTEGER default 0, 
 	 PRIMARY KEY (room, number),
    FOREIGN KEY (room) REFERENCES rooms (id)
 );

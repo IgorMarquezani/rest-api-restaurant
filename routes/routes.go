@@ -6,6 +6,7 @@ import (
 
 	"github.com/api/controllers/product_list"
 	"github.com/api/controllers/products"
+	"github.com/api/controllers/rooms"
 	"github.com/api/controllers/tabs"
 	"github.com/api/controllers/users"
 	"github.com/api/middleware"
@@ -19,6 +20,10 @@ func UserRoutes(r *mux.Router) {
 	r.Handle("/api/user/full-info", users.UserFullInfo{}).Methods("POST")
 }
 
+func RoomRoutes(r *mux.Router) {
+  r.Handle("/api/room/full-info/", rooms.RoomInfo{}).Methods("GET")
+}
+
 func ProdListRoutes(r *mux.Router) {
 	r.Handle("/api/product_list/register", prodlist.RegisterList{}).Methods("POST")
 }
@@ -29,7 +34,7 @@ func ProductsRoutes(r *mux.Router) {
 }
 
 func TabsRoutes(r *mux.Router) {
-	r.Handle("/api/tab/register", tabs.TabRegister{}).Methods("POST")
+	r.Handle("/api/tab/register", tabs.HandleTabRegister{}).Methods("POST")
 }
 
 func HandleRequest() {
@@ -37,6 +42,7 @@ func HandleRequest() {
 	r.Use(middleware.SetAllContentType)
 
 	UserRoutes(r)
+  RoomRoutes(r)
 	ProdListRoutes(r)
 	ProductsRoutes(r)
 	TabsRoutes(r)

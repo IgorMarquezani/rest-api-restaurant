@@ -31,8 +31,17 @@ func (ur UserFullInfo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user.Room.FindTabsRequests()
 	user.UserInvites()
 	user.AcceptedRooms()
+
+  for i := range user.RoomsAsGuest {
+    user.RoomsAsGuest[i].FindGuests()
+    user.RoomsAsGuest[i].FindProductsLists()
+	  for j := range user.RoomsAsGuest[i].ProductsList {
+		  user.RoomsAsGuest[i].ProductsList[j] = models.FindProductsInList(user.RoomsAsGuest[i].ProductsList[j])
+	  }
+    user.RoomsAsGuest[i].FindTabs()
+    user.RoomsAsGuest[i].FindTabsRequests()
+  }
 	user.ClearCriticalInfo()
 
-	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(user)
 }

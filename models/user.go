@@ -39,7 +39,6 @@ type User struct {
 }
 
 func (u *User) ClearCriticalInfo() {
-	u.Id = 0
 	u.Passwd = ""
 }
 

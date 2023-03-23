@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	_ "strconv"
 	"strings"
 
 	_ "github.com/lib/pq"
@@ -62,11 +61,13 @@ const (
 // QUERY FOR TABS
 const (
 	SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
-	InsertTab        string = "insert into tabs (number, room) values ($1, $2)"
+	InsertTab        string = "insert into tabs (number, room, time_maded, table_number) values ($1, $2, $3, $4)"
 	SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
 )
 
+// QUERY FOR REQUESTS
 const (
+  InsertRequest       string = "insert into requests values ($1, $2, $3, $4, $5);"
 	SelectRequestsInTab string = "select * from requests where tab_room = $1 and tab_number = $2"
 )
 

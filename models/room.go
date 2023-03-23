@@ -79,7 +79,7 @@ func (r *Room) FindTabs() []Tab {
 
 	for i := 0; search.Next(); i++ {
 		r.Tabs = append(r.Tabs, Tab{})
-		search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded)
+		search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded, &r.Tabs[i].Table)
 	}
 
 	return r.Tabs
@@ -105,8 +105,10 @@ call the FindeGuests() function before using this specific one
 */
 func (r *Room) GuestPermission(user User) int {
 	if r.Guests == nil {
-		r.FindGuests()
+    r.Guests = make(GuestMap)
 	}
+
+  r.FindGuests()
 
 	if !r.IsGuest(user) {
 		return 0
@@ -117,8 +119,10 @@ func (r *Room) GuestPermission(user User) int {
 
 func (r *Room) IsGuest(user User) bool {
 	if r.Guests == nil {
-		r.FindGuests()
+    r.Guests = make(GuestMap)
 	}
+
+	r.FindGuests()
 
 	if r.Guests[user.Email].Id != 0 {
 		return true

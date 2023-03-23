@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/api/database"
 )
 
@@ -9,6 +11,7 @@ type Tab struct {
 	RoomId   int     `json:"room"`
 	PayValue float64 `json:"pay_value"`
 	Maded    string  `json:"time_maded"`
+  Table    int     `json:"table"`
 
 	Requests []Request `json:"requests"`
 }
@@ -26,15 +29,17 @@ func (t *Tab) FindRequests() {
 		t.Requests = append(t.Requests, Request{})
 
 		search.Scan(&t.Requests[i].TabRoom, &t.Requests[i].TabNumber,
-			&t.Requests[i].ProductName, &t.Requests[i].ProductList, &t.Requests[i].Quantity)
+			&t.Requests[i].ProductName, &t.Requests[i].ProductListRoom, &t.Requests[i].Quantity)
 	}
 }
 
 func NextTabNumberInRoom(room int) int {
-	var db = database.GetConnection()
-	var selected Tab
-	var previous Tab
-	var next Tab
+	var (
+    db = database.GetConnection()
+	  selected Tab
+	  previous Tab
+	  next Tab
+  )
 
 	search, err := db.Query(database.SelectTabsInRoom, room)
 	if err != nil {
@@ -42,9 +47,9 @@ func NextTabNumberInRoom(room int) int {
 	}
 
 	for search.Next() {
-		search.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded)
+		search.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
 
-		if next.Number-previous.Number > 1 {
+		if next.Number - previous.Number > 1 {
 			selected.Number = previous.Number + 1
 			break
 		}
@@ -53,29 +58,22 @@ func NextTabNumberInRoom(room int) int {
 	}
 
 	if selected.Number == 0 {
-		max, _ := db.Query(database.SelectMaxTabId, room)
-		if max.Next() {
-			max.Scan(&selected.Number)
-		}
-	}
+    return next.Number + 1
+ 	}
 
 	return selected.Number
 }
 
-func InsertTab(tab *Tab) error {
+func InsertTab(tab Tab) error {
 	var db = database.GetConnection()
 
 	if tab.Number == 0 {
 		tab.Number = NextTabNumberInRoom(tab.RoomId)
 	}
 
-	insert, err := db.Query(database.InsertTab, tab.Number, tab.RoomId)
+  _, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, time.Now().Local().Format("15:05:04"), tab.Table)
 	if err != nil {
 		return err
-	}
-
-	if insert.Next() {
-		insert.Scan(tab.Number, tab.RoomId, &tab.PayValue, &tab.Maded)
 	}
 
 	return nil
