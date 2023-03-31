@@ -16,6 +16,13 @@ type Tab struct {
 	Requests []Request `json:"requests"`
 }
 
+func (t *Tab) CalculateValue() {
+  for i := range t.Requests {
+    product := RoomProducts[t.RoomId][t.Requests[i].ProductName]
+    t.PayValue += product.Price * float64(t.Requests[i].Quantity)
+  }
+}
+
 func (t *Tab) FindRequests() {
 	var db = database.GetConnection()
 	t.Requests = make([]Request, 0)
@@ -64,7 +71,7 @@ func NextTabNumberInRoom(room int) int {
 	return selected.Number
 }
 
-func InsertTab(tab Tab) error {
+func InsertTab(tab *Tab) error {
 	var db = database.GetConnection()
 
 	if tab.Number == 0 {
@@ -77,4 +84,15 @@ func InsertTab(tab Tab) error {
 	}
 
 	return nil
+}
+
+func DeleteTab(tab Tab) error {
+  var db = database.GetConnection()
+
+  _, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
+  if err != nil {
+    panic(err)
+  }
+
+  return nil
 }

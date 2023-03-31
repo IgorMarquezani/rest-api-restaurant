@@ -7,6 +7,10 @@ import (
 	"github.com/api/database"
 )
 
+const (
+  NoSessionErr string = "No session"
+)
+
 type UserSession struct {
 	Who        int    `json:"who"`
 	ActiveRoom int    `json:"active_room"`
@@ -36,10 +40,12 @@ func StartSession(u User, securePS string) (UserSession, error) {
 }
 
 func ThereIsSession(u User) (UserSession, bool) {
-	var search *sql.Rows
-	var err error
-	var session UserSession
-	var db = database.GetConnection()
+	var (
+	  session UserSession
+    search *sql.Rows
+	  err error
+	  db = database.GetConnection()
+  )
 
 	search, err = db.Query(database.SelectSessionByUId, u.Id)
 	defer search.Close()
@@ -62,11 +68,11 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 	var db = database.GetConnection()
 
 	if _, ok := ThereIsSession(User{Id: seesion.Who}); !ok {
-		return fmt.Errorf("no session initialized")
+		return fmt.Errorf(NoSessionErr)
 	}
 
 	if room.Id <= 0 {
-		return fmt.Errorf("room not initialized")
+		return fmt.Errorf("Room id value cannot be empty")
 	}
 
 	_, err := db.Query(database.UpdateSessionAcRoom, room.Id, seesion.Who)

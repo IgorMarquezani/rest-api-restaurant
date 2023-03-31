@@ -2,7 +2,9 @@
 
 if [[ $1 == "start" ]]; then
   docker-compose up &
-  go run ../main.go
+  cd ../
+  sleep 6
+  go run main.go
 elif [[ $1 == "reset" ]]; then
   docker-compose down
   for ((i = 1; i < 10; i++)); do

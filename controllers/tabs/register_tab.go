@@ -15,7 +15,7 @@ type HandleTabRegister struct {
 }
 
 func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err, user, _ := controllers.VerifySession(r)
+	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -24,6 +24,11 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	json.NewDecoder(r.Body).Decode(&handler.tab)
 	handler.jsonRoom = models.RoomByItsId(handler.tab.RoomId)
 
+  if handler.jsonRoom.Id == 0 {
+    handler.jsonRoom = models.RoomByItsId(session.ActiveRoom)
+    handler.tab.RoomId = handler.jsonRoom.Id
+  }
+
 	if !handler.jsonRoom.IsOwner(user) {
 		if !handler.jsonRoom.IsGuest(user) {
 			http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
@@ -31,8 +36,7 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-  handler.tab.Number = models.NextTabNumberInRoom(handler.tab.RoomId)
-	if err := models.InsertTab(handler.tab); err != nil {
+	if err := models.InsertTab(&handler.tab); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
 			http.Error(w, "Tab already exists", http.StatusAlreadyReported)
 			return
@@ -45,6 +49,7 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
   for i := 0; i < len(handler.tab.Requests); i++ {
     err := models.InsertRequest(handler.tab, handler.tab.Requests[i])
     if err != nil {
+      models.DeleteTab(handler.tab)
       http.Error(w, err.Error(), http.StatusConflict)
       return
     }

@@ -1,4 +1,4 @@
-package users
+package session
 
 import (
 	"encoding/json"
@@ -7,10 +7,10 @@ import (
 	"github.com/api/controllers"
 )
 
-type Authenticate struct {
+type HandleAuthentication struct {
 }
 
-func (au Authenticate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (handler HandleAuthentication) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err, user, _ := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, "Not loged in", http.StatusFailedDependency)

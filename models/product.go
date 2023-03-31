@@ -6,7 +6,7 @@ import (
 	"github.com/api/database"
 )
 
-type ProductMap map[string]Product
+type Products map[string]Product
 
 type Product struct {
 	ListName    string  `json:"list_name"`

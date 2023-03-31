@@ -4,6 +4,10 @@ import (
 	"github.com/api/database"
 )
 
+type ProductsInRoom map[int]Products
+
+var RoomProducts ProductsInRoom
+
 type Room struct {
 	Id    int `json:"id"`
 	Owner int `json:"owner"`
@@ -92,6 +96,10 @@ func (r *Room) FindTabsRequests() {
 }
 
 func (r *Room) IsOwner(user User) bool {
+  if r.Owner == 0 && r.Id > 0 {
+    r.Owner = InitUserByRoom(r.Id).Id
+  }
+
 	if r.Owner == user.Id {
 		return true
 	}

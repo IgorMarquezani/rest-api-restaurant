@@ -11,13 +11,13 @@ type ProductListMap map[string]ProductList
 type ProductList struct {
 	Name     string `json:"name"`
 	Room     int    `json:"room"`
-	Products ProductMap
+	Products Products
 }
 
 func FindProductsInList(pl ProductList) ProductList {
 	var db = database.GetConnection()
 
-	pl.Products = make(ProductMap)
+	pl.Products = make(Products)
 
 	search, err := db.Query(database.SelectProductsByList, pl.Name, pl.Room)
 	if err != nil {
@@ -61,9 +61,9 @@ func (pl *ProductList) IsOnProductList(product Product) bool {
 	return false
 }
 
-func (pl *ProductList) GetProducts() ProductMap {
+func (pl *ProductList) GetProducts() Products {
 	if pl.Products == nil {
-		pl.Products = make(ProductMap)
+		pl.Products = make(Products)
 	}
 
 	var product Product

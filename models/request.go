@@ -1,8 +1,6 @@
 package models
 
 import (
-	"errors"
-
 	"github.com/api/database"
 )
 
@@ -15,12 +13,24 @@ type Request struct {
 }
 
 func InsertRequest(tab Tab, request Request) error {
-  if tab.RoomId != request.ProductListRoom {
-    return errors.New("Request product list room does not match with tab room")
+  if request.ProductListRoom == 0 {
+    request.ProductListRoom = tab.RoomId
   }
+
   var db = database.GetConnection()
 
   _, err := db.Query(database.InsertRequest, tab.RoomId, tab.Number, request.ProductName, request.ProductListRoom, request.Quantity)
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+
+func DeleteRequestsInTab(tab Tab) error {
+  var db = database.GetConnection()
+
+  _, err := db.Query(database.DeleteRequestsInTab, tab.RoomId, tab.Number)
   if err != nil {
     panic(err)
   }
