@@ -48,4 +48,5 @@ func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
 
 func AllowCrossOrigin(w *http.ResponseWriter, origin string) {
   (*w).Header().Set("Access-Control-Allow-Origin", origin)
+  (*w).Header().Set("Access-Control-Allow-Headers", "Origin")
 }
