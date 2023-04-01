@@ -54,5 +54,5 @@ func HandleRequest() {
 	ProductsRoutes(r)
 	TabsRoutes(r)
 
-	log.Fatal(http.ListenAndServe(":6000", r))
+	log.Fatal(http.ListenAndServe(":3300", r))
 }
