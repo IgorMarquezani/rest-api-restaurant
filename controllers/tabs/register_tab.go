@@ -15,7 +15,7 @@ type HandleTabRegister struct {
 }
 
 func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  w.Header().Set("Acess-Control-Allow-Origin", "http://localhost:8081")
+  controllers.AllowCrossOrigin(&w, "*")
 
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {
