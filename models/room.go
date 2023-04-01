@@ -96,9 +96,9 @@ func (r *Room) FindTabsRequests() {
 }
 
 func (r *Room) IsOwner(user User) bool {
-  if r.Owner == 0 && r.Id > 0 {
-    r.Owner = InitUserByRoom(r.Id).Id
-  }
+	if r.Owner == 0 && r.Id > 0 {
+		r.Owner = InitUserByRoom(r.Id).Id
+	}
 
 	if r.Owner == user.Id {
 		return true
@@ -113,10 +113,10 @@ call the FindeGuests() function before using this specific one
 */
 func (r *Room) GuestPermission(user User) int {
 	if r.Guests == nil {
-    r.Guests = make(GuestMap)
+		r.Guests = make(GuestMap)
 	}
 
-  r.FindGuests()
+	r.FindGuests()
 
 	if !r.IsGuest(user) {
 		return 0
@@ -127,7 +127,7 @@ func (r *Room) GuestPermission(user User) int {
 
 func (r *Room) IsGuest(user User) bool {
 	if r.Guests == nil {
-    r.Guests = make(GuestMap)
+		r.Guests = make(GuestMap)
 	}
 
 	r.FindGuests()

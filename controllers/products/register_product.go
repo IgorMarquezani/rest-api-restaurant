@@ -12,7 +12,7 @@ import (
 type HandleProductRegister struct {
 	product     models.Product
 	productList models.ProductList
-	room    models.Room
+	room        models.Room
 }
 
 func (handler HandleProductRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -53,11 +53,11 @@ func (handler HandleProductRegister) ServeHTTP(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-  if _, ok := models.RoomProducts[handler.room.Id]; !ok {
-    models.RoomProducts[handler.room.Id] = make(models.Products)
-  }
+	if _, ok := models.RoomProducts[handler.room.Id]; !ok {
+		models.RoomProducts[handler.room.Id] = make(models.Products)
+	}
 
-  models.RoomProducts[handler.room.Id][handler.product.Name] = handler.product
+	models.RoomProducts[handler.room.Id][handler.product.Name] = handler.product
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(handler.product)

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-  NoSessionErr string = "No session"
+	NoSessionErr string = "No session"
 )
 
 type UserSession struct {
@@ -41,11 +41,11 @@ func StartSession(u User, securePS string) (UserSession, error) {
 
 func ThereIsSession(u User) (UserSession, bool) {
 	var (
-	  session UserSession
-    search *sql.Rows
-	  err error
-	  db = database.GetConnection()
-  )
+		session UserSession
+		search  *sql.Rows
+		err     error
+		db      = database.GetConnection()
+	)
 
 	search, err = db.Query(database.SelectSessionByUId, u.Id)
 	defer search.Close()

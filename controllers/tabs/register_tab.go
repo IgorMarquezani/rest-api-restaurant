@@ -15,6 +15,8 @@ type HandleTabRegister struct {
 }
 
 func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+  w.Header().Set("Acess-Control-Allow-Origin", "http://localhost:8081")
+
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -24,10 +26,10 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	json.NewDecoder(r.Body).Decode(&handler.tab)
 	handler.jsonRoom = models.RoomByItsId(handler.tab.RoomId)
 
-  if handler.jsonRoom.Id == 0 {
-    handler.jsonRoom = models.RoomByItsId(session.ActiveRoom)
-    handler.tab.RoomId = handler.jsonRoom.Id
-  }
+	if handler.jsonRoom.Id == 0 {
+		handler.jsonRoom = models.RoomByItsId(session.ActiveRoom)
+		handler.tab.RoomId = handler.jsonRoom.Id
+	}
 
 	if !handler.jsonRoom.IsOwner(user) {
 		if !handler.jsonRoom.IsGuest(user) {
@@ -45,15 +47,15 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Internal Server error", http.StatusInternalServerError)
 		return
 	}
-  
-  for i := 0; i < len(handler.tab.Requests); i++ {
-    err := models.InsertRequest(handler.tab, handler.tab.Requests[i])
-    if err != nil {
-      models.DeleteTab(handler.tab)
-      http.Error(w, err.Error(), http.StatusConflict)
-      return
-    }
-  }
+
+	for i := 0; i < len(handler.tab.Requests); i++ {
+		err := models.InsertRequest(handler.tab, handler.tab.Requests[i])
+		if err != nil {
+			models.DeleteTab(handler.tab)
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(handler.tab)

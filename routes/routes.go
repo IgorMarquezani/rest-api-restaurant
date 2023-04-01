@@ -23,11 +23,11 @@ func UserRoutes(r *mux.Router) {
 
 func SessionsRoutes(r *mux.Router) {
 	r.Handle("/api/session/auth", session.HandleAuthentication{}).Methods("POST")
-  r.HandleFunc("/api/session/update/room", session.MustUpdateActiveRoom).Methods("POST")
+	r.HandleFunc("/api/session/update/room", session.MustUpdateActiveRoom).Methods("POST")
 }
 
 func RoomRoutes(r *mux.Router) {
-  r.Handle("/api/room/full-info/", rooms.RoomInfo{}).Methods("GET")
+	r.Handle("/api/room/full-info/", rooms.RoomInfo{}).Methods("GET")
 }
 
 func ProdListRoutes(r *mux.Router) {
@@ -48,8 +48,8 @@ func HandleRequest() {
 	r.Use(middleware.SetAllContentType)
 
 	UserRoutes(r)
-  SessionsRoutes(r)
-  RoomRoutes(r)
+	SessionsRoutes(r)
+	RoomRoutes(r)
 	ProdListRoutes(r)
 	ProductsRoutes(r)
 	TabsRoutes(r)

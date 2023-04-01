@@ -9,31 +9,31 @@ import (
 )
 
 func MustUpdateActiveRoom(w http.ResponseWriter, r *http.Request) {
-  var room models.Room
+	var room models.Room
 
-  err, user, session := controllers.VerifySession(r)
-  if err != nil {
-    panic(err)
-  }
+	err, user, session := controllers.VerifySession(r)
+	if err != nil {
+		panic(err)
+	}
 
-  json.NewDecoder(r.Body).Decode(&room)
+	json.NewDecoder(r.Body).Decode(&room)
 
-  if !room.IsOwner(user) {
-    if !room.IsGuest(user) {
-      http.Error(w, "Not a Guest in that room", http.StatusUnauthorized)
-      return
-    }
-  }
+	if !room.IsOwner(user) {
+		if !room.IsGuest(user) {
+			http.Error(w, "Not a Guest in that room", http.StatusUnauthorized)
+			return
+		}
+	}
 
-  if err := models.UpdateActiveRoom(&session, room); err != nil {
-    if err.Error() == models.NoSessionErr {
-      http.Error(w, "Please log in", http.StatusBadRequest)
-      return
-    }
+	if err := models.UpdateActiveRoom(&session, room); err != nil {
+		if err.Error() == models.NoSessionErr {
+			http.Error(w, "Please log in", http.StatusBadRequest)
+			return
+		}
 
-    http.Error(w, "Iternal server error", http.StatusInternalServerError)
-    return
-  }
+		http.Error(w, "Iternal server error", http.StatusInternalServerError)
+		return
+	}
 
-  w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusAccepted)
 }

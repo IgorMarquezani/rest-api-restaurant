@@ -11,16 +11,16 @@ type Tab struct {
 	RoomId   int     `json:"room"`
 	PayValue float64 `json:"pay_value"`
 	Maded    string  `json:"time_maded"`
-  Table    int     `json:"table"`
+	Table    int     `json:"table"`
 
 	Requests []Request `json:"requests"`
 }
 
 func (t *Tab) CalculateValue() {
-  for i := range t.Requests {
-    product := RoomProducts[t.RoomId][t.Requests[i].ProductName]
-    t.PayValue += product.Price * float64(t.Requests[i].Quantity)
-  }
+	for i := range t.Requests {
+		product := RoomProducts[t.RoomId][t.Requests[i].ProductName]
+		t.PayValue += product.Price * float64(t.Requests[i].Quantity)
+	}
 }
 
 func (t *Tab) FindRequests() {
@@ -42,11 +42,11 @@ func (t *Tab) FindRequests() {
 
 func NextTabNumberInRoom(room int) int {
 	var (
-    db = database.GetConnection()
-	  selected Tab
-	  previous Tab
-	  next Tab
-  )
+		db       = database.GetConnection()
+		selected Tab
+		previous Tab
+		next     Tab
+	)
 
 	search, err := db.Query(database.SelectTabsInRoom, room)
 	if err != nil {
@@ -56,7 +56,7 @@ func NextTabNumberInRoom(room int) int {
 	for search.Next() {
 		search.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
 
-		if next.Number - previous.Number > 1 {
+		if next.Number-previous.Number > 1 {
 			selected.Number = previous.Number + 1
 			break
 		}
@@ -65,8 +65,8 @@ func NextTabNumberInRoom(room int) int {
 	}
 
 	if selected.Number == 0 {
-    return next.Number + 1
- 	}
+		return next.Number + 1
+	}
 
 	return selected.Number
 }
@@ -78,7 +78,7 @@ func InsertTab(tab *Tab) error {
 		tab.Number = NextTabNumberInRoom(tab.RoomId)
 	}
 
-  _, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, time.Now().Local().Format("15:05:04"), tab.Table)
+	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, time.Now().Local().Format("15:05:04"), tab.Table)
 	if err != nil {
 		return err
 	}
@@ -87,12 +87,12 @@ func InsertTab(tab *Tab) error {
 }
 
 func DeleteTab(tab Tab) error {
-  var db = database.GetConnection()
+	var db = database.GetConnection()
 
-  _, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
-  if err != nil {
-    panic(err)
-  }
+	_, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
+	if err != nil {
+		panic(err)
+	}
 
-  return nil
+	return nil
 }
