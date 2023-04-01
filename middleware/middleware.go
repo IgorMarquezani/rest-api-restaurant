@@ -3,11 +3,14 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/api/controllers"
 )
 
 func SetAllContentType(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "applicantion/json")
+    controllers.AllowCrossOrigin(&w, "*")
 		LogRequest(w, r)
 		next.ServeHTTP(w, r)
 	})
