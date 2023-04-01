@@ -15,7 +15,7 @@ type HandleTabRegister struct {
 }
 
 func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-  controllers.AllowCrossOrigin(&w, "*")
+	controllers.AllowCrossOrigin(&w, "*")
 
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {
@@ -50,9 +50,13 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	for i := 0; i < len(handler.tab.Requests); i++ {
 		err := models.InsertRequest(handler.tab, handler.tab.Requests[i])
+		if database.IsDuplicateKeyError(err.Error()) {
+			continue
+		}
+
 		if err != nil {
 			models.DeleteTab(handler.tab)
-			http.Error(w, err.Error(), http.StatusConflict)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}

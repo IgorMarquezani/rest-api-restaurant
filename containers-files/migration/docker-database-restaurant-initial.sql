@@ -139,6 +139,7 @@ create table requests (
   product_name text not null,
   product_list integer not null, 
   quantity integer not null,
+  PRIMARY KEY(product_name, tab_number, tab_room),
   foreign key (product_name, product_list) references products (name, list_room),
   foreign key (tab_room, tab_number) references tabs (room, number) ON DELETE CASCADE
 );
