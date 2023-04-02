@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/api/database"
@@ -14,6 +15,36 @@ type Tab struct {
 	Table    int     `json:"table"`
 
 	Requests []Request `json:"requests"`
+}
+
+func InsertTab(tab *Tab) error {
+	var db = database.GetConnection()
+
+	if tab.Number == 0 {
+		tab.Number = NextTabNumberInRoom(tab.RoomId)
+	}
+
+  if tab.PayValue == 0 {
+    tab.CalculateValue()
+  }
+
+	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, time.Now().Local().Format("15:05:04"), tab.Table)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteTab(tab Tab) error {
+	var db = database.GetConnection()
+
+	_, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
 }
 
 func (t *Tab) CalculateValue() {
@@ -31,6 +62,7 @@ func (t *Tab) FindRequests() {
 	if err != nil {
 		panic(err)
 	}
+  defer search.Close()
 
 	for i := 0; search.Next(); i++ {
 		t.Requests = append(t.Requests, Request{})
@@ -41,8 +73,8 @@ func (t *Tab) FindRequests() {
 }
 
 func NextTabNumberInRoom(room int) int {
+	var db = database.GetConnection()
 	var (
-		db       = database.GetConnection()
 		selected Tab
 		previous Tab
 		next     Tab
@@ -52,11 +84,12 @@ func NextTabNumberInRoom(room int) int {
 	if err != nil {
 		panic(err)
 	}
+  defer search.Close()
 
 	for search.Next() {
 		search.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
 
-		if next.Number-previous.Number > 1 {
+		if next.Number - previous.Number > 1 {
 			selected.Number = previous.Number + 1
 			break
 		}
@@ -71,28 +104,12 @@ func NextTabNumberInRoom(room int) int {
 	return selected.Number
 }
 
-func InsertTab(tab *Tab) error {
-	var db = database.GetConnection()
+func (tab *Tab) RemoveMadedTrash() error {
+  if len(tab.Maded) < 20 {
+    return errors.New("Too short")
+  }
 
-	if tab.Number == 0 {
-		tab.Number = NextTabNumberInRoom(tab.RoomId)
-	}
+  tab.Maded = tab.Maded[11:19]
 
-	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, time.Now().Local().Format("15:05:04"), tab.Table)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func DeleteTab(tab Tab) error {
-	var db = database.GetConnection()
-
-	_, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
-	if err != nil {
-		panic(err)
-	}
-
-	return nil
+  return nil
 }

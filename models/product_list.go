@@ -14,20 +14,51 @@ type ProductList struct {
 	Products Products
 }
 
+func InsertProductList(pr ProductList) error {
+	db := database.GetConnection()
+
+	_, err := db.Query(database.InsertProductList, pr.Name, pr.Room)
+
+	return err
+}
+
+func SelectProductList(name string, roomId int) (error, ProductList) {
+	var prodList ProductList
+	var db = database.GetConnection()
+
+	rows, err := db.Query(database.SelectProductList, name, roomId)
+	if err != nil {
+		panic(err)
+	}
+  defer rows.Close()
+
+	if rows.Next() {
+		err := rows.Scan(&prodList.Name, &prodList.Room)
+		if err != nil {
+			panic(err)
+		}
+
+		return nil, prodList
+	}
+
+	return errors.New("No such product list"), prodList
+}
+
 func FindProductsInList(pl ProductList) ProductList {
 	var db = database.GetConnection()
 
 	pl.Products = make(Products)
 
-	search, err := db.Query(database.SelectProductsByList, pl.Name, pl.Room)
+	rows, err := db.Query(database.SelectProductsByList, pl.Name, pl.Room)
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
-	for search.Next() {
+	for rows.Next() {
 		product := Product{}
 
-		search.Scan(&product.ListName, &product.ListRoom,
+		rows.Scan(&product.ListName, &product.ListRoom,
 			&product.Name, &product.Price, &product.Description, &product.Image)
 
 		pl.Products[product.Name] = product
@@ -62,20 +93,23 @@ func (pl *ProductList) IsOnProductList(product Product) bool {
 }
 
 func (pl *ProductList) GetProducts() Products {
+	var (
+	  db = database.GetConnection() 
+    product Product
+  )
+
 	if pl.Products == nil {
 		pl.Products = make(Products)
 	}
 
-	var product Product
-	var db = database.GetConnection()
-
-	search, err := db.Query(database.SelectProductsByList, pl.Name, pl.Room)
+	rows, err := db.Query(database.SelectProductsByList, pl.Name, pl.Room)
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
-	for search.Next() {
-		search.Scan(&product.ListName, &product.ListRoom,
+	for rows.Next() {
+		rows.Scan(&product.ListName, &product.ListRoom,
 			&product.Name, &product.Price, &product.Description, &product.Image)
 
 		pl.Products[product.Name] = product
@@ -84,31 +118,3 @@ func (pl *ProductList) GetProducts() Products {
 	return pl.Products
 }
 
-func InsertProductList(pr ProductList) error {
-	db := database.GetConnection()
-
-	_, err := db.Query(database.InsertProductList, pr.Name, pr.Room)
-
-	return err
-}
-
-func SelectProductList(name string, room int) (error, ProductList) {
-	var prodList ProductList
-	var db = database.GetConnection()
-
-	search, err := db.Query(database.SelectProductList, name, room)
-	if err != nil {
-		panic(err)
-	}
-
-	if search.Next() {
-		err := search.Scan(&prodList.Name, &prodList.Room)
-		if err != nil {
-			panic(err)
-		}
-
-		return nil, prodList
-	}
-
-	return errors.New("No such product list"), prodList
-}

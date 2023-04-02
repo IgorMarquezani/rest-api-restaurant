@@ -38,97 +38,6 @@ type User struct {
 	Invites      []Invite
 }
 
-func (u *User) ClearCriticalInfo() {
-	u.Passwd = ""
-}
-
-func (u *User) UserInvites() []Invite {
-	var db = database.GetConnection()
-
-	search, err := db.Query(database.SearchInviteByTarget, u.Id)
-	if err != nil {
-		panic(err)
-	}
-
-	u.Invites = make([]Invite, 0)
-
-	for search.Next() {
-		invite := Invite{}
-		search.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status)
-		u.Invites = append(u.Invites, invite)
-	}
-
-	return u.Invites
-}
-
-func (u *User) AcceptedRooms() []Room {
-	var db = database.GetConnection()
-
-	search, err := db.Query(database.SelectGuestRooms, u.Id)
-	if err != nil {
-		panic(err)
-	}
-
-	u.RoomsAsGuest = make([]Room, 0)
-	for search.Next() {
-		room := Room{}
-		search.Scan(&room.Id, &room.Owner)
-		u.RoomsAsGuest = append(u.RoomsAsGuest, room)
-	}
-
-	return u.RoomsAsGuest
-}
-
-func InitUserByRoom(room int) User {
-	var u User
-	var db = database.GetConnection()
-
-	query, err := db.Query(database.SelectUserByRoom, room)
-	if err != nil {
-		panic(err)
-	}
-
-	if query.Next() {
-		err := query.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return u
-}
-
-func SelectUser(key any) User {
-	var search *sql.Rows
-	var err error
-
-	db := database.GetConnection()
-	u := User{}
-
-	switch data := key.(type) {
-	case string:
-		search, err = db.Query(database.SearchUserByEmail, data)
-	case int:
-		search, err = db.Query(database.SearchUserById, data)
-	default:
-		panic("Invalid data type")
-	}
-
-	if err != nil {
-		panic(err)
-	}
-
-	if search.Next() {
-		err = search.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
-		if err != nil {
-			panic(err)
-		}
-	}
-	search.Close()
-
-	return u
-}
-
 func InsertUser(u User) error {
 	u.Passwd = utils.HashString(u.Passwd)
 
@@ -139,17 +48,110 @@ func InsertUser(u User) error {
 	return err
 }
 
-func UserBySessionHash(hash string) (User, error) {
-	var u User
-	db := database.GetConnection()
+func (u *User) ClearCriticalInfo() {
+	u.Passwd = ""
+}
 
-	search, err := db.Query(database.SearchUserBySession, hash)
+func (u *User) UserInvites() []Invite {
+	var db = database.GetConnection()
+
+	rows, err := db.Query(database.SearchInviteByTarget, u.Id)
+	if err != nil {
+		panic(err)
+	}
+  defer rows.Close()
+
+	u.Invites = make([]Invite, 0)
+
+	for rows.Next() {
+		invite := Invite{}
+		rows.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status)
+		u.Invites = append(u.Invites, invite)
+	}
+
+	return u.Invites
+}
+
+func (u *User) AcceptedRooms() []Room {
+	var db = database.GetConnection()
+
+	rows, err := db.Query(database.SelectGuestRooms, u.Id)
 	if err != nil {
 		panic(err)
 	}
 
-	if search.Next() {
-		search.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
+	u.RoomsAsGuest = make([]Room, 0)
+	for rows.Next() {
+		room := Room{}
+		rows.Scan(&room.Id, &room.Owner)
+		u.RoomsAsGuest = append(u.RoomsAsGuest, room)
+	}
+
+	return u.RoomsAsGuest
+}
+
+func InitUserByRoom(room int) User {
+	var u User
+	var db = database.GetConnection()
+
+	rows, err := db.Query(database.SelectUserByRoom, room)
+	if err != nil {
+		panic(err)
+	}
+
+	if rows.Next() {
+		err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return u
+}
+
+func SelectUser(key any) User {
+	var db = database.GetConnection()
+	var ( 
+    rows *sql.Rows
+	  err  error
+    user User
+  )
+
+	switch data := key.(type) {
+	case string:
+		rows, err = db.Query(database.SearchUserByEmail, data)
+	case int:
+		rows, err = db.Query(database.SearchUserById, data)
+	default:
+		panic("Invalid data type")
+	}
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err = rows.Scan(&user.Id, &user.Name, &user.Email, &user.Passwd, &user.Img)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return user
+}
+
+func UserBySessionHash(hash string) (User, error) {
+	var u User
+	db := database.GetConnection()
+
+	rows, err := db.Query(database.SearchUserBySession, hash)
+	if err != nil {
+		panic(err)
+	}
+
+	if rows.Next() {
+		rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
 		return u, nil
 	}
 

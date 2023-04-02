@@ -15,6 +15,8 @@ type HandleTabRegister struct {
 }
 
 func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var howManyIsertions uint
+
 	controllers.AllowCrossOrigin(&w, "*")
 
 	err, user, session := controllers.VerifySession(r)
@@ -38,6 +40,7 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	handler.tab.CalculateValue()
 	if err := models.InsertTab(&handler.tab); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
 			http.Error(w, "Tab already exists", http.StatusAlreadyReported)
@@ -48,9 +51,13 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	for i := 0; i < len(handler.tab.Requests); i++ {
+	for i := range handler.tab.Requests {
+		if handler.tab.Requests[i].Quantity <= 0 {
+			continue
+		}
+
 		err := models.InsertRequest(handler.tab, handler.tab.Requests[i])
-		if database.IsDuplicateKeyError(err.Error()) {
+		if err != nil && database.IsDuplicateKeyError(err.Error()) {
 			continue
 		}
 
@@ -59,6 +66,14 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		howManyIsertions++
+	}
+
+	if howManyIsertions == 0 {
+		models.DeleteTab(handler.tab)
+		http.Error(w, "Tab no registered because as requests have 0 zero quantity", http.StatusExpectationFailed)
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)

@@ -49,7 +49,7 @@ const (
 
 	// QUERY FOR TABS
 	SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
-	InsertTab        string = "insert into tabs (number, room, time_maded, table_number) values ($1, $2, $3, $4)"
+	InsertTab        string = "insert into tabs (number, room, pay_value, time_maded, table_number) values ($1, $2, $3, $4, $5)"
 	DeleteTab        string = "delete from tabs where number = $1 and room = $2;"
 	SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
 
@@ -63,7 +63,6 @@ const (
 var (
 	db   *sql.DB
 	err  error
-	trys int = 1
 )
 
 func IsDuplicateKeyError(warning string) bool {

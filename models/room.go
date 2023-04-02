@@ -26,16 +26,16 @@ func (r *Room) FindGuests() GuestMap {
 	var db = database.GetConnection()
 
 	query, err := db.Prepare(database.SelectRoomGuests)
-	defer query.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer query.Close()
 
 	result, err := query.Query(r.Id)
-	defer result.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer result.Close()
 
 	if r.Guests == nil {
 		r.Guests = make(GuestMap)
@@ -62,6 +62,7 @@ func (r *Room) FindProductsLists() ProductListMap {
 	if err != nil {
 		panic(err)
 	}
+  defer search.Close()
 
 	for search.Next() {
 		list := ProductList{}
@@ -80,11 +81,13 @@ func (r *Room) FindTabs() []Tab {
 	if err != nil {
 		panic(err)
 	}
+  defer search.Close()
 
 	for i := 0; search.Next(); i++ {
 		r.Tabs = append(r.Tabs, Tab{})
 		search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded, &r.Tabs[i].Table)
-	}
+    r.Tabs[i].RemoveMadedTrash()
+}
 
 	return r.Tabs
 }
@@ -144,10 +147,10 @@ func RoomByItsOwner(owner int) Room {
 	var db = database.GetConnection()
 
 	result, err := db.Query(database.SelectRoomByOwner, owner)
-	defer result.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer result.Close()
 
 	if result.Next() {
 		result.Scan(&room.Id, &room.Owner)
@@ -165,6 +168,7 @@ func RoomByItsId(id int) Room {
 	if err != nil {
 		panic(err)
 	}
+  defer search.Close()
 
 	if search.Next() {
 		search.Scan(&room.Id, &room.Owner)

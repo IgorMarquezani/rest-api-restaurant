@@ -47,11 +47,11 @@ func HandleRequest() {
 	r := mux.NewRouter()
 	r.Use(middleware.SetAllContentType)
 
-	UserRoutes(r)
 	SessionsRoutes(r)
-	RoomRoutes(r)
 	ProdListRoutes(r)
 	ProductsRoutes(r)
+	UserRoutes(r)
+	RoomRoutes(r)
 	TabsRoutes(r)
 
 	log.Fatal(http.ListenAndServe(":3300", r))

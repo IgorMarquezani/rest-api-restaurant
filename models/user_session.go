@@ -22,39 +22,40 @@ func StartSession(u User, securePS string) (UserSession, error) {
 	var db = database.GetConnection()
 
 	insert, err := db.Query(database.InsertNewSession, u.Id, u.Room.Id, securePS)
+	if err != nil {
+		return session, err
+	}
 	defer insert.Close()
+
+	rows, err := db.Query(database.SelectSessionByHash, securePS)
 	if err != nil {
 		return session, err
 	}
+  defer rows.Close()
 
-	search, err := db.Query(database.SelectSessionByHash, securePS)
-	if err != nil {
-		return session, err
-	}
-
-	if search.Next() {
-		search.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
+	if rows.Next() {
+		rows.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
 	}
 
 	return session, nil
 }
 
 func ThereIsSession(u User) (UserSession, bool) {
+  var db = database.GetConnection()
 	var (
 		session UserSession
-		search  *sql.Rows
+		rows    *sql.Rows
 		err     error
-		db      = database.GetConnection()
 	)
 
-	search, err = db.Query(database.SelectSessionByUId, u.Id)
-	defer search.Close()
+	rows, err = db.Query(database.SelectSessionByUId, u.Id)
 	if err != nil {
 		panic(err)
 	}
+	defer rows.Close()
 
-	if search.Next() {
-		err := search.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
+	if rows.Next() {
+		err := rows.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
 		if err != nil {
 			panic(err)
 		}
@@ -79,24 +80,26 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 	if err != nil {
 		return err
 	}
+
 	seesion.ActiveRoom = room.Id
 
 	return nil
 }
 
 func SessionBySecurePS(hash []byte) (UserSession, bool) {
-	var UserSession UserSession
+	var session UserSession
 	var db = database.GetConnection()
 
-	search, err := db.Query(database.SelectSessionByHash, hash)
+	rows, err := db.Query(database.SelectSessionByHash, hash)
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
-	if search.Next() {
-		search.Scan(&UserSession.Who, &UserSession.ActiveRoom, &UserSession.SecurePS)
-		return UserSession, true
+	if rows.Next() {
+		rows.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
+		return session, true
 	}
 
-	return UserSession, false
+	return session, false
 }

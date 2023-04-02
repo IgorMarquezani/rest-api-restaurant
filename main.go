@@ -11,12 +11,7 @@ import (
 func init() {
 	database.MustNewConnection()
 
-	var (
-		db      = database.GetConnection()
-		room    models.Room
-		product models.Product
-	)
-
+	var db = database.GetConnection()
 	models.RoomProducts = make(models.ProductsInRoom)
 
 	searchR, err := db.Query(database.SelectAllRooms)
@@ -26,37 +21,41 @@ func init() {
 	defer searchR.Close()
 
 	for searchR.Next() {
+		var (
+			room    models.Room
+		)
+
 		searchR.Scan(&room.Id, &room.Owner)
+
+		models.RoomProducts[room.Id] = make(models.Products)
+
 		searchP, err := db.Query(database.SelectProductsByRoom, room.Id)
 		if err != nil {
 			panic(err)
 		}
+		defer searchP.Close()
 
 		for searchP.Next() {
-			var (
-				description []byte
-				img         []byte
-			)
-
-			err := searchP.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &description, &img)
+      var (
+			product models.Product
+        desc []byte
+        img []byte
+      )
+			err := searchP.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &desc, &img)
 			if err != nil {
 				panic(err)
 			}
 
-			if description != nil {
-				product.Description = string(description)
-			}
+      if desc != nil {
+        product.Description = string(desc)
+      }
 
-			if img != nil {
-				product.Image = img
-			}
+      if img != nil {
+        product.Image = img
+      }
 
-			models.RoomProducts[room.Id] = make(models.Products)
 			models.RoomProducts[room.Id][product.Name] = product
-
 		}
-
-		searchP.Close()
 	}
 
 	for i := range models.RoomProducts {

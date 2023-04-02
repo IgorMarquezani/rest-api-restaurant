@@ -11,16 +11,17 @@ type Invite struct {
 
 func SelectInviteByUser(u User) []Invite {
 	var db = database.GetConnection()
-	var invites = make([]Invite, 8)
+	var invites = make([]Invite, 0)
 
-	search, err := db.Query(database.SearchInviteByTarget, u.Id)
+	rows, err := db.Query(database.SearchInviteByTarget, u.Id)
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
-	for i := 0; search.Next(); i++ {
+	for i := 0; rows.Next(); i++ {
 		invites = append(invites, Invite{})
-		err := search.Scan(&invites[i].Id, &invites[i].Target, &invites[i].InvitingRoom, &invites[i].Status)
+		err := rows.Scan(&invites[i].Id, &invites[i].Target, &invites[i].InvitingRoom, &invites[i].Status)
 		if err != nil {
 			panic(err)
 		}
