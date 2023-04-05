@@ -9,39 +9,51 @@ import (
 	"github.com/api/models"
 )
 
-type HandleTabRegister struct {
-	tab      models.Tab
-	jsonRoom models.Room
+type Register struct {
+	user    models.User
+	session models.UserSession
+	tab     models.Tab
+	room    models.Room
 }
 
-func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (re Register) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var howManyIsertions uint
+	var err error
+
+  // if flusher, ok := w.(http.Flusher); ok {
+  //   flusher.Flush()
+  // }
+
+	err, re.user, re.session = controllers.VerifySession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+	}
+
+  err = json.NewDecoder(r.Body).Decode(&re.tab)
+  if err != nil {
+    panic(err)
+  }
+	re.room = models.RoomByItsId(re.tab.RoomId)
+
+	if re.room.Id == 0 {
+		re.room = models.RoomByItsId(re.session.ActiveRoom)
+		re.tab.RoomId = re.room.Id
+	}
+
+	if re.tab.PayValue != 0 {
+		re.tab.PayValue = 0
+	}
 
 	controllers.AllowCrossOrigin(&w, "*")
 
-	err, user, session := controllers.VerifySession(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-
-	json.NewDecoder(r.Body).Decode(&handler.tab)
-	handler.jsonRoom = models.RoomByItsId(handler.tab.RoomId)
-
-	if handler.jsonRoom.Id == 0 {
-		handler.jsonRoom = models.RoomByItsId(session.ActiveRoom)
-		handler.tab.RoomId = handler.jsonRoom.Id
-	}
-
-	if !handler.jsonRoom.IsOwner(user) {
-		if !handler.jsonRoom.IsGuest(user) {
+	if !re.room.IsOwner(re.user) {
+		if !re.room.IsGuest(re.user) {
 			http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
 			return
 		}
 	}
 
-	handler.tab.CalculateValue()
-	if err := models.InsertTab(&handler.tab); err != nil {
+	if err := models.InsertTab(&re.tab); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
 			http.Error(w, "Tab already exists", http.StatusAlreadyReported)
 			return
@@ -51,31 +63,31 @@ func (handler HandleTabRegister) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	for i := range handler.tab.Requests {
-		if handler.tab.Requests[i].Quantity <= 0 {
+	for i := 0; i < len(re.tab.Requests); howManyIsertions++ {
+		if re.tab.Requests[i].Quantity <= 0 {
+			howManyIsertions--
 			continue
 		}
 
-		err := models.InsertRequest(handler.tab, handler.tab.Requests[i])
+		err := models.InsertRequest(re.tab, re.tab.Requests[i])
 		if err != nil && database.IsDuplicateKeyError(err.Error()) {
+			howManyIsertions--
 			continue
 		}
 
 		if err != nil {
-			models.DeleteTab(handler.tab)
+			models.DeleteTab(re.tab)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		howManyIsertions++
 	}
 
 	if howManyIsertions == 0 {
-		models.DeleteTab(handler.tab)
-		http.Error(w, "Tab no registered because as requests have 0 zero quantity", http.StatusExpectationFailed)
+		models.DeleteTab(re.tab)
+		http.Error(w, "Tab not registered because all requests have 0 zero quantity", http.StatusExpectationFailed)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(handler.tab)
+	json.NewEncoder(w).Encode(re.tab)
 }

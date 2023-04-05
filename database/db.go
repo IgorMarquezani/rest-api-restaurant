@@ -66,13 +66,21 @@ var (
 )
 
 func IsDuplicateKeyError(warning string) bool {
-	message := strings.Split(warning, " ")
-
-	if message[1] == "duplicate" && message[2] == "key" {
+	msg := strings.Split(warning, " ")
+	if msg[1] == "duplicate" && msg[2] == "key" {
 		return true
 	}
 
 	return false
+}
+
+func IsAuthenticantionFailedError(warning string) bool {
+  msg := strings.Split(warning, " ")
+  if msg[1] == "Ident" && msg[2] == "authentication" && msg[3] == "failed" {
+    return true
+  }
+
+  return false
 }
 
 func MustNewConnection() {

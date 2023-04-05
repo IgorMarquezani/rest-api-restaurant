@@ -1,38 +1,46 @@
 package middleware
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 )
 
 func SetAllContentType(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "applicantion/json")
-		LogRequest(w, r)
+		LogRequest(r)
 		next.ServeHTTP(w, r)
 	})
 }
 
-func LogRequest(w http.ResponseWriter, r *http.Request) {
-	var color string
+func LogRequest(r *http.Request) {
+	// escape sequence for resiting text color
 	var reset string = "\033[0m"
+	var urlColor string = "\033[37m"
+	var bodyColor string = "\033[35m"
+	var methodColor string
 
 	if r.Method == http.MethodPost {
-		color = "\033[34m"
+		// Blue
+		methodColor = "\033[34m"
+	} else if r.Method == http.MethodDelete {
+		// Red
+		methodColor = "\033[31m"
+	} else if r.Method == http.MethodPut {
+		// Yellow
+		methodColor = "\033[33m"
+	} else if r.Method == http.MethodGet {
+		// Green
+		methodColor = "\033[32m"
 	}
 
-	if r.Method == http.MethodDelete {
-		color = "\033[31m"
-	}
+	body, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	if r.Method == http.MethodPut {
-		color = "\033[33m"
-	}
-
-	if r.Method == http.MethodGet {
-		color = "\033[32m"
-	}
-
-	fmt.Printf("%s%v%s URL: %v\n", color, r.Method, reset, r.URL)
-	fmt.Println(r.Body)
+	fmt.Printf("URL: %s%v%s\n", urlColor, r.URL, reset)
+	fmt.Printf("Method: %s%v%s\n", methodColor, r.Method, reset)
+	fmt.Printf("Body: %s%v%s\n", bodyColor, string(body), reset)
+	fmt.Println("+-----------------------------------------------------------+")
 }

@@ -18,6 +18,11 @@ func MustUpdateActiveRoom(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&room)
 
+	if room.Id == session.ActiveRoom {
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+
 	if !room.IsOwner(user) {
 		if !room.IsGuest(user) {
 			http.Error(w, "Not a Guest in that room", http.StatusUnauthorized)

@@ -31,23 +31,23 @@ func (r *Room) FindGuests() GuestMap {
 	}
 	defer query.Close()
 
-	result, err := query.Query(r.Id)
+	rows, err := query.Query(r.Id)
 	if err != nil {
 		panic(err)
 	}
-	defer result.Close()
+	defer rows.Close()
 
 	if r.Guests == nil {
 		r.Guests = make(GuestMap)
 	}
 
-	for result.Next() {
-		user := User{}
-		if err := result.Scan(&user.Id, &user.Name, &user.Email, &user.Passwd, &user.Img); err != nil {
+	for rows.Next() {
+		u := User{}
+		if err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img); err != nil {
 			panic(err)
 		}
-		user.ClearCriticalInfo()
-		r.Guests[user.Email] = user
+		u.ClearCriticalInfo()
+		r.Guests[u.Email] = u
 	}
 
 	return r.Guests

@@ -40,7 +40,7 @@ func ProductsRoutes(r *mux.Router) {
 }
 
 func TabsRoutes(r *mux.Router) {
-	r.Handle("/api/tab/register", tabs.HandleTabRegister{}).Methods("POST")
+	r.Handle("/api/tab/register", tabs.Register{}).Methods("POST")
 }
 
 func HandleRequest() {

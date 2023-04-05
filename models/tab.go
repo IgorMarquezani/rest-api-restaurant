@@ -49,8 +49,8 @@ func DeleteTab(tab Tab) error {
 
 func (t *Tab) CalculateValue() {
 	for i := range t.Requests {
-		product := RoomProducts[t.RoomId][t.Requests[i].ProductName]
-		t.PayValue += product.Price * float64(t.Requests[i].Quantity)
+		p := RoomProducts[t.RoomId][t.Requests[i].ProductName]
+		t.PayValue += p.Price * float64(t.Requests[i].Quantity)
 	}
 }
 
@@ -58,16 +58,16 @@ func (t *Tab) FindRequests() {
 	var db = database.GetConnection()
 	t.Requests = make([]Request, 0)
 
-	search, err := db.Query(database.SelectRequestsInTab, t.RoomId, t.Number)
+	rows, err := db.Query(database.SelectRequestsInTab, t.RoomId, t.Number)
 	if err != nil {
 		panic(err)
 	}
-  defer search.Close()
+  defer rows.Close()
 
-	for i := 0; search.Next(); i++ {
+	for i := 0; rows.Next(); i++ {
 		t.Requests = append(t.Requests, Request{})
 
-		search.Scan(&t.Requests[i].TabRoom, &t.Requests[i].TabNumber,
+		rows.Scan(&t.Requests[i].TabRoom, &t.Requests[i].TabNumber,
 			&t.Requests[i].ProductName, &t.Requests[i].ProductListRoom, &t.Requests[i].Quantity)
 	}
 }
@@ -80,14 +80,14 @@ func NextTabNumberInRoom(room int) int {
 		next     Tab
 	)
 
-	search, err := db.Query(database.SelectTabsInRoom, room)
+	rows, err := db.Query(database.SelectTabsInRoom, room)
 	if err != nil {
 		panic(err)
 	}
-  defer search.Close()
+  defer rows.Close()
 
-	for search.Next() {
-		search.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
+	for rows.Next() {
+		rows.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
 
 		if next.Number - previous.Number > 1 {
 			selected.Number = previous.Number + 1

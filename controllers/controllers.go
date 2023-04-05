@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/api/models"
@@ -18,7 +17,6 @@ func VerifySessionCookie(r *http.Request) (error, models.User) {
 	}
 
 	hash := utils.Invert(cookiePS.Value)
-	fmt.Println(hash, "TERMINACAO")
 
 	user, err = models.UserBySessionHash(hash)
 	if err != nil {
@@ -47,6 +45,6 @@ func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
 }
 
 func AllowCrossOrigin(w *http.ResponseWriter, origin string) {
-  (*w).Header().Set("Access-Control-Allow-Origin", origin)
-  (*w).Header().Set("Access-Control-Allow-Headers", "Origin")
+	(*w).Header().Set("Access-Control-Allow-Origin", origin)
+	(*w).Header().Set("Access-Control-Allow-Headers", "Origin")
 }

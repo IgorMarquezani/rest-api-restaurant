@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/api/database"
 	"github.com/api/models"
@@ -16,7 +18,11 @@ func init() {
 
 	searchR, err := db.Query(database.SelectAllRooms)
 	if err != nil {
-		panic(err)
+    if database.IsAuthenticantionFailedError(err.Error()) {
+      log.Println("error: ", err.Error(), "\nAre you shure the database is up?")
+      os.Exit(1)
+    }
+    panic(err)
 	}
 	defer searchR.Close()
 
