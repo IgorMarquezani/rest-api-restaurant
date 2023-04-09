@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/api/controllers/invites"
 	"github.com/api/controllers/product_list"
 	"github.com/api/controllers/products"
 	"github.com/api/controllers/rooms"
@@ -15,32 +16,38 @@ import (
 )
 
 func UserRoutes(r *mux.Router) {
-	r.Handle("/api/user/register", users.Register{}).Methods("POST")
-	r.Handle("/api/user/login", users.Login{}).Methods("POST")
-	r.Handle("/api/user/auth", session.HandleAuthentication{}).Methods("POST")
-	r.Handle("/api/user/full-info", users.UserFullInfo{}).Methods("POST")
+	r.HandleFunc("/api/user/register", users.Register).Methods(http.MethodPost)
+	r.Handle("/api/user/login", users.Login{}).Methods(http.MethodPost)
+	r.Handle("/api/user/auth", session.HandleAuthentication{}).Methods(http.MethodPost)
+	r.HandleFunc("/api/user/full-info", users.FullInfo).Methods(http.MethodGet, http.MethodPost)
 }
 
 func SessionsRoutes(r *mux.Router) {
-	r.Handle("/api/session/auth", session.HandleAuthentication{}).Methods("POST")
-	r.HandleFunc("/api/session/update/room", session.MustUpdateActiveRoom).Methods("POST")
+	r.Handle("/api/session/auth", session.HandleAuthentication{}).Methods(http.MethodPost)
+	r.HandleFunc("/api/session/update/room", session.UpdateActiveRoom).Methods(http.MethodPost, http.MethodPut)
 }
 
-func RoomRoutes(r *mux.Router) {
-	r.Handle("/api/room/full-info/", rooms.RoomInfo{}).Methods("GET")
+func RoomsRoutes(r *mux.Router) {
+	r.Handle("/api/room/full-info/", rooms.FullInfo{}).Methods(http.MethodGet)
 }
 
 func ProdListRoutes(r *mux.Router) {
-	r.Handle("/api/product_list/register", prodlist.RegisterList{}).Methods("POST")
+	r.HandleFunc("/api/product_list/register", product_list.Register).Methods(http.MethodPost)
 }
 
 func ProductsRoutes(r *mux.Router) {
-	r.Handle("/api/product/register", products.HandleProductRegister{}).Methods("POST")
-	r.Handle("/api/product/update", products.UpdateProduct{}).Methods("PUT")
+	r.HandleFunc("/api/product/register", products.Register).Methods(http.MethodPost)
+	r.Handle("/api/product/update", products.UpdateProduct{}).Methods(http.MethodPut)
+	r.HandleFunc("/api/product/{name}/{room}", products.GetProduct).Methods(http.MethodGet)
 }
 
 func TabsRoutes(r *mux.Router) {
-	r.Handle("/api/tab/register", tabs.Register{}).Methods("POST")
+	r.HandleFunc("/api/tab/register", tabs.Register).Methods(http.MethodPost)
+}
+
+func InvitesRoutes(r *mux.Router) {
+	r.HandleFunc("/api/invite/send/{email}/", invites.Send).Methods(http.MethodPost)
+	r.HandleFunc("/api/invite/accept/{id}/", invites.Send).Methods(http.MethodPost)
 }
 
 func HandleRequest() {
@@ -50,8 +57,9 @@ func HandleRequest() {
 	SessionsRoutes(r)
 	ProdListRoutes(r)
 	ProductsRoutes(r)
+	InvitesRoutes(r)
+	RoomsRoutes(r)
 	UserRoutes(r)
-	RoomRoutes(r)
 	TabsRoutes(r)
 
 	log.Fatal(http.ListenAndServe(":3300", r))

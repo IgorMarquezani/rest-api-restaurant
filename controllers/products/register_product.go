@@ -9,43 +9,47 @@ import (
 	"github.com/api/models"
 )
 
-type HandleProductRegister struct {
-	product     models.Product
-	productList models.ProductList
-	room        models.Room
-}
+func Register(w http.ResponseWriter, r *http.Request) {
+	var (
+		p    models.Product
+		room models.Room
+	)
 
-func (handler HandleProductRegister) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err, user, _ := controllers.VerifySession(r)
+	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+    return
 	}
 
-	user.Room = models.RoomByItsOwner(user.Id)
+  body, err := controllers.ValidJSONFormat(r.Body)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusBadRequest)
+  }
 
-	json.NewDecoder(r.Body).Decode(&handler.product)
+  json.Unmarshal(body, &p)
+	if p.ListRoom <= 0 {
+		room = models.RoomByItsId(session.ActiveRoom)
+		p.ListRoom = room.Id
+	} else {
+		room = models.RoomByItsId(p.ListRoom)
+		p.ListRoom = room.Id
+	}
 
-	handler.room = models.RoomByItsId(handler.product.ListRoom)
-	handler.room.FindGuests()
-
-	if !handler.room.IsOwner(user) {
-		if !handler.room.IsGuest(user) {
+	if !room.IsOwner(user) {
+		if !room.IsGuest(user) {
 			http.Error(w, "You are not a guest", http.StatusBadRequest)
 			return
 		}
 
-		if handler.room.GuestPermission(user) < 2 {
+		if room.GuestPermission(user) < 2 {
 			http.Error(w, "You do not have permission for this operation", http.StatusUnauthorized)
 			return
 		}
 	}
 
-	handler.productList.Name = handler.product.ListName
-	handler.productList.Room = handler.product.ListRoom
-
-	if err := models.InsertProduct(handler.product, handler.productList); err != nil {
+	if err := models.InsertProduct(p); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
-			http.Error(w, "Product name already in use", http.StatusConflict)
+			http.Error(w, "Product name already in use", http.StatusAlreadyReported)
 			return
 		}
 
@@ -53,12 +57,14 @@ func (handler HandleProductRegister) ServeHTTP(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if _, ok := models.RoomProducts[handler.room.Id]; !ok {
-		models.RoomProducts[handler.room.Id] = make(models.Products)
+	if _, ok := models.RoomProducts[room.Id]; !ok {
+		models.RoomProducts[room.Id] = make(models.Products)
 	}
 
-	models.RoomProducts[handler.room.Id][handler.product.Name] = handler.product
+	models.RoomProducts[room.Id][p.Name] = p 
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(handler.product)
+  encoder := json.NewEncoder(w)
+  encoder.SetIndent("", "    ")
+  encoder.Encode(p)
 }

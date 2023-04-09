@@ -13,7 +13,7 @@ type Product struct {
 	ListRoom    int     `json:"list_room"`
 	Name        string  `json:"name"`
 	Price       float64 `json:"price"`
-	Description string  `json:"description"`
+	Description []byte  `json:"description"`
 	Image       []byte  `json:"image"`
 }
 
@@ -22,12 +22,16 @@ type UpdatingProduct struct {
 	Old Product `json:"old_product"`
 }
 
-func InsertProduct(product Product, productList ProductList) error {
+func InsertProduct(product Product) error {
 	db := database.GetConnection()
 
+  if product.ListName == "" {
+    product.ListName = "orphans"
+  }
+
 	_, err := db.Query(database.InsertProduct,
-		productList.Name, productList.Room, product.Name, 
-    product.Price, product.Description, product.Image)
+		product.ListName, product.ListRoom, product.Name,
+		product.Price, product.Description, product.Image)
 
 	return err
 }
@@ -36,8 +40,8 @@ func UpdateProduct(both UpdatingProduct, productList ProductList) error {
 	db := database.GetConnection()
 
 	_, err := db.Query(database.UpdateProduct,
-		both.New.Name, both.New.Price, both.New.Description, 
-    both.New.Image, productList.Room, both.Old.Name)
+		both.New.Name, both.New.Price, both.New.Description,
+		both.New.Image, productList.Room, both.Old.Name)
 
 	return err
 }
@@ -50,6 +54,28 @@ func DeleteProduct(product Product) error {
 	return err
 }
 
+func SelectOneProduct(room int, name string) (Product, error) {
+	var p Product
+	var db = database.GetConnection()
+
+	rows, err := db.Query(database.SelectProduct, name, room)
+	if err != nil {
+		return p, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.Scan(&p.ListName, &p.ListRoom, &p.Name, &p.Price, &p.Description, &p.Image)
+		if err != nil {
+			return Product{}, err
+		}
+	} else {
+		return Product{}, errors.New(database.ErrNotfound)
+	}
+
+	return p, nil
+}
+
 func SelectProductByHisList(productName string, listRoom int) (error, Product) {
 	var product Product
 	var db = database.GetConnection()
@@ -58,12 +84,10 @@ func SelectProductByHisList(productName string, listRoom int) (error, Product) {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
-		err := rows.Scan(&product.ListName, &product.ListRoom, &product.Name,
-			&product.Price, &product.Description, &product.Image)
-
+		err := rows.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &product.Description, &product.Image)
 		if err != nil {
 			panic(err)
 		}

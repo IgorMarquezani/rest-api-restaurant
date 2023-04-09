@@ -8,10 +8,7 @@ import (
 	"github.com/api/models"
 )
 
-type UserFullInfo struct {
-}
-
-func (ur UserFullInfo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func FullInfo(w http.ResponseWriter, r *http.Request) {
 	err, user := controllers.VerifySessionCookie(r)
 	if err != nil {
 		http.Error(w, "Not logged in", http.StatusFailedDependency)
@@ -43,5 +40,8 @@ func (ur UserFullInfo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	user.ClearCriticalInfo()
 
-	json.NewEncoder(w).Encode(user)
+  w.WriteHeader(http.StatusOK)
+  encoder := json.NewEncoder(w)
+  encoder.SetIndent("", "    ")
+  encoder.Encode(user)
 }

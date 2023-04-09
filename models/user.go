@@ -9,6 +9,10 @@ import (
 	"github.com/api/utils"
 )
 
+const (
+  ErrNoSuchUser string = "User does not exist"
+)
+
 type UserRegister struct {
 	User    User   `json:"user"`
 	Confirm string `json:"confirm_passwd"`
@@ -59,13 +63,16 @@ func (u *User) UserInvites() []Invite {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	u.Invites = make([]Invite, 0)
 
 	for rows.Next() {
 		invite := Invite{}
-		rows.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status)
+    err := rows.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status, &invite.Permission)
+    if err != nil {
+      panic(err)
+    }
 		u.Invites = append(u.Invites, invite)
 	}
 
@@ -79,6 +86,7 @@ func (u *User) AcceptedRooms() []Room {
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
 	u.RoomsAsGuest = make([]Room, 0)
 	for rows.Next() {
@@ -98,6 +106,7 @@ func InitUserByRoom(room int) User {
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
@@ -109,13 +118,14 @@ func InitUserByRoom(room int) User {
 	return u
 }
 
+// Select User by email or id
 func SelectUser(key any) User {
-	var db = database.GetConnection()
-	var ( 
-    rows *sql.Rows
-	  err  error
-    user User
-  )
+	var (
+		err  error
+		user User
+		rows *sql.Rows
+		db   = database.GetConnection()
+	)
 
 	switch data := key.(type) {
 	case string:
@@ -129,6 +139,7 @@ func SelectUser(key any) User {
 	if err != nil {
 		panic(err)
 	}
+
 	defer rows.Close()
 
 	if rows.Next() {
@@ -149,6 +160,7 @@ func UserBySessionHash(hash string) (User, error) {
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
 	if rows.Next() {
 		rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)

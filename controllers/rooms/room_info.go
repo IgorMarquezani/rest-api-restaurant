@@ -9,10 +9,10 @@ import (
 	"github.com/api/models"
 )
 
-type RoomInfo struct {
+type FullInfo struct {
 }
 
-func (ri RoomInfo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ri FullInfo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err, user := controllers.VerifySessionCookie(r)
 	if err != nil {
 		http.Error(w, "Not loged in", http.StatusFailedDependency)

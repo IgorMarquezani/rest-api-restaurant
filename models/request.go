@@ -33,6 +33,37 @@ func InsertRequest(tab Tab, request Request) error {
 	return nil
 }
 
+func SelectRequest(productName string, tabNumber, roomId int) Request {
+  var request Request
+  var db = database.GetConnection()
+
+  rows, err := db.Query(database.SelectRequest, productName, tabNumber, roomId)
+  if err != nil {
+    panic(err)
+  }
+  defer rows.Close()
+
+  if rows.Next() {
+    err := rows.Scan(&request.TabRoom, &request.TabNumber, &request.ProductName, &request.ProductListRoom, &request.Quantity)
+    if err != nil {
+      panic(err)
+    }
+  }
+
+  return request
+}
+
+func UpdateRequestQuantity(request Request, quantity uint) error {
+  var db = database.GetConnection()
+
+  _, err := db.Query(database.UpdateRequestQuantity, quantity, request.ProductName, request.TabNumber, request.TabRoom)
+  if err != nil {
+    panic(err)
+  }
+
+  return nil
+}
+
 func DeleteRequestsInTab(tab Tab) error {
 	var db = database.GetConnection()
 

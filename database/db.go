@@ -8,6 +8,10 @@ import (
 )
 
 const (
+	ErrNotfound string = "Not found"
+)
+
+const (
 	// QUERYS FOR USERS
 	InsertUser          string = "INSERT INTO users (name, email, passwd, img) VALUES ($1, $2, $3, $4);"
 	SearchUserByEmail   string = "SELECT * FROM users WHERE email=$1;"
@@ -24,6 +28,7 @@ const (
 	SelectProductsByRoom string = "select (products.*) from products join rooms on products.list_room = rooms.id where rooms.id = $1"
 
 	// QUERYS FOR ROOMS
+	InsertRoom        string = "insert into rooms (owner) values ($1);"
 	SelectAllRooms    string = "select * from rooms;"
 	SelectRoomByOwner string = "select * from rooms where owner = $1"
 	SelectRoomById    string = "select * from rooms where id=$1"
@@ -31,7 +36,9 @@ const (
 	SelectGuestRooms  string = "select (rooms.*) from guests join rooms on guests.inviting_room = rooms.id where user_id = $1;"
 
 	// QUERY FOR INVITES
+	InsertInvite         string = "insert into invites (target, inviting_room, permission) values ($1, $2, $3)"
 	SearchInviteByTarget string = "select * from invites where target=$1;"
+	SearchInvite         string = "select * from invites where target=$1 and inviting_room = $2;"
 
 	// QUERY FOR USER SESSIONS
 	InsertNewSession    string = "insert into users_session (who, active_room, securePS) values ($1, $2, $3);"
@@ -40,6 +47,7 @@ const (
 	UpdateSessionAcRoom string = "update users_session set active_room = $1 where who = $2"
 
 	// QUERY FOR GUESTS
+	InsertGuest              string = "insert into guests values ($1, $2, $3);"
 	SelectGuestByUserAndRoom string = "select * from guests where user_id = $1 and inviting_room = $2"
 
 	// QUERY FOR PRODUCTS LIST
@@ -54,15 +62,17 @@ const (
 	SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
 
 	// QUERY FOR REQUESTS
-	InsertRequest       string = "insert into requests values ($1, $2, $3, $4, $5);"
-	DeleteRequestsInTab string = "delete from requests where tab_room = $1 and tab_number = $2;"
-	SelectRequestsInTab string = "select * from requests where tab_room = $1 and tab_number = $2"
+	InsertRequest         string = "insert into requests values ($1, $2, $3, $4, $5);"
+	SelectRequest         string = "select * from requests where product_name = $1 and tab_number = $2 and tab_room = $3;"
+	DeleteRequestsInTab   string = "delete from requests where tab_room = $1 and tab_number = $2;"
+	SelectRequestsInTab   string = "select * from requests where tab_room = $1 and tab_number = $2"
+	UpdateRequestQuantity string = "update requests set quantity = $1 where product_name = $2 and tab_number = $3 and tab_room = $4;"
 )
 
 // database variables
 var (
-	db   *sql.DB
-	err  error
+	db  *sql.DB
+	err error
 )
 
 func IsDuplicateKeyError(warning string) bool {
@@ -75,12 +85,12 @@ func IsDuplicateKeyError(warning string) bool {
 }
 
 func IsAuthenticantionFailedError(warning string) bool {
-  msg := strings.Split(warning, " ")
-  if msg[1] == "Ident" && msg[2] == "authentication" && msg[3] == "failed" {
-    return true
-  }
+	msg := strings.Split(warning, " ")
+	if msg[1] == "Ident" && msg[2] == "authentication" && msg[3] == "failed" {
+		return true
+	}
 
-  return false
+	return false
 }
 
 func MustNewConnection() {

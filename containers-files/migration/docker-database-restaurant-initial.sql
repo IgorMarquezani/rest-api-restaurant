@@ -81,6 +81,7 @@ CREATE TABLE invites (
    target INTEGER NOT NULL,
 	 inviting_room INTEGER NOT NULL,
    status text not null default 'not aceppeted',
+   permission integer not null default 1,
 	 FOREIGN KEY (target) REFERENCES users (id),
    FOREIGN KEY (inviting_room) REFERENCES rooms (id)
 );

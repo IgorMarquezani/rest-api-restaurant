@@ -53,7 +53,7 @@ func init() {
 			}
 
       if desc != nil {
-        product.Description = string(desc)
+        product.Description = desc
       }
 
       if img != nil {

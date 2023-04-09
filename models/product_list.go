@@ -6,18 +6,33 @@ import (
 	"github.com/api/database"
 )
 
+const (
+	ErrPlEmptyName string = "product list with no name"
+)
+
+func OrphanList(roomId uint) ProductList {
+  return ProductList {
+    Name: "orphans",
+    Room: int(roomId),
+  }
+}
+
 type ProductListMap map[string]ProductList
 
 type ProductList struct {
-	Name     string `json:"name"`
-	Room     int    `json:"room"`
-	Products Products
+	Name     string   `json:"name"`
+	Room     int      `json:"room"`
+	Products Products `json:"products"`
 }
 
-func InsertProductList(pr ProductList) error {
+func InsertProductList(pl ProductList) error {
+	if pl.Name == "" {
+		return errors.New(ErrPlEmptyName)
+	}
+
 	db := database.GetConnection()
 
-	_, err := db.Query(database.InsertProductList, pr.Name, pr.Room)
+	_, err := db.Query(database.InsertProductList, pl.Name, pl.Room)
 
 	return err
 }
@@ -30,7 +45,7 @@ func SelectProductList(name string, roomId int) (error, ProductList) {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&prodList.Name, &prodList.Room)
@@ -53,7 +68,7 @@ func FindProductsInList(pl ProductList) ProductList {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	for rows.Next() {
 		product := Product{}
@@ -94,9 +109,9 @@ func (pl *ProductList) IsOnProductList(product Product) bool {
 
 func (pl *ProductList) GetProducts() Products {
 	var (
-	  db = database.GetConnection() 
-    product Product
-  )
+		db      = database.GetConnection()
+		product Product
+	)
 
 	if pl.Products == nil {
 		pl.Products = make(Products)
@@ -106,7 +121,7 @@ func (pl *ProductList) GetProducts() Products {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	for rows.Next() {
 		rows.Scan(&product.ListName, &product.ListRoom,
@@ -117,4 +132,3 @@ func (pl *ProductList) GetProducts() Products {
 
 	return pl.Products
 }
-

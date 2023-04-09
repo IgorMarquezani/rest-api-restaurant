@@ -17,6 +17,15 @@ type Room struct {
 	Tabs         []Tab
 }
 
+func MustInsertRoom(userId uint) {
+  db := database.GetConnection()
+
+  _, err := db.Query(database.InsertRoom, userId)
+  if err != nil {
+    panic(err)
+  }
+}
+
 /*
 Don't ever call this function without filling the Id field
 unless you want to update the Guests field don't call that function again

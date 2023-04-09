@@ -2,13 +2,24 @@ package models
 
 import "github.com/api/database"
 
+type GuestMap map[string]User
+
 type Guest struct {
 	InvintingRoom   int `json:"invinting_room"`
 	UserId          int `json:"user_id"`
 	PermissionLevel int `json:"permission_level"`
 }
 
-type GuestMap map[string]User
+func InsertGuest(roomId, userId, permission uint) error {
+  var db = database.GetConnection()
+
+  _, err := db.Query(database.InsertGuest, roomId, userId, permission)
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
 
 func SelectGuestPermission(user, room int) int {
 	var guest Guest

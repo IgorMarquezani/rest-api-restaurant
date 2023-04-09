@@ -8,7 +8,7 @@ import (
 	"github.com/api/models"
 )
 
-func MustUpdateActiveRoom(w http.ResponseWriter, r *http.Request) {
+func UpdateActiveRoom(w http.ResponseWriter, r *http.Request) {
 	var room models.Room
 
 	err, user, session := controllers.VerifySession(r)

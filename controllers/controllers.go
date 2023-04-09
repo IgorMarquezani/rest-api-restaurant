@@ -1,11 +1,17 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/api/models"
 	"github.com/api/utils"
+)
+
+const (
+  ErrJsonFormat string = "Invalid JSON format"
 )
 
 func VerifySessionCookie(r *http.Request) (error, models.User) {
@@ -27,9 +33,11 @@ func VerifySessionCookie(r *http.Request) (error, models.User) {
 }
 
 func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
-	var user models.User
-	var session models.UserSession
-	var ok bool
+	var (
+		user    models.User
+		session models.UserSession
+		ok      bool
+	)
 
 	err, user := VerifySessionCookie(r)
 	if err != nil {
@@ -42,6 +50,19 @@ func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
 	}
 
 	return nil, user, session
+}
+
+func ValidJSONFormat(b io.ReadCloser) ([]byte, error) {
+  body, err := io.ReadAll(b)
+  if err != nil {
+    return nil, err 
+  }
+
+  if !json.Valid(body) {
+    return nil, errors.New(ErrJsonFormat) 
+  }
+
+  return body, nil
 }
 
 func AllowCrossOrigin(w *http.ResponseWriter, origin string) {
