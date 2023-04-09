@@ -18,17 +18,17 @@ func init() {
 
 	searchR, err := db.Query(database.SelectAllRooms)
 	if err != nil {
-    if database.IsAuthenticantionFailedError(err.Error()) {
-      log.Println("error: ", err.Error(), "\nAre you shure the database is up?")
-      os.Exit(1)
-    }
-    panic(err)
+		if database.IsAuthenticantionFailedError(err.Error()) {
+			log.Println("error: ", err.Error(), "\nAre you shure the database is up?")
+			os.Exit(1)
+		}
+		panic(err)
 	}
 	defer searchR.Close()
 
 	for searchR.Next() {
 		var (
-			room    models.Room
+			room models.Room
 		)
 
 		searchR.Scan(&room.Id, &room.Owner)
@@ -42,23 +42,23 @@ func init() {
 		defer searchP.Close()
 
 		for searchP.Next() {
-      var (
-			product models.Product
-        desc []byte
-        img []byte
-      )
+			var (
+				product models.Product
+				desc    []byte
+				img     []byte
+			)
 			err := searchP.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &desc, &img)
 			if err != nil {
 				panic(err)
 			}
 
-      if desc != nil {
-        product.Description = desc
-      }
+			if desc != nil {
+				product.Description = desc
+			}
 
-      if img != nil {
-        product.Image = img
-      }
+			if img != nil {
+				product.Image = img
+			}
 
 			models.RoomProducts[room.Id][product.Name] = product
 		}
