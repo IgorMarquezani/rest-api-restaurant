@@ -11,10 +11,10 @@ const (
 )
 
 func OrphanList(roomId uint) ProductList {
-  return ProductList {
-    Name: "orphans",
-    Room: int(roomId),
-  }
+	return ProductList{
+		Name: "orphans",
+		Room: int(roomId),
+	}
 }
 
 type ProductListMap map[string]ProductList

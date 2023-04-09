@@ -18,12 +18,12 @@ type Room struct {
 }
 
 func MustInsertRoom(userId uint) {
-  db := database.GetConnection()
+	db := database.GetConnection()
 
-  _, err := db.Query(database.InsertRoom, userId)
-  if err != nil {
-    panic(err)
-  }
+	_, err := db.Query(database.InsertRoom, userId)
+	if err != nil {
+		panic(err)
+	}
 }
 
 /*
@@ -71,7 +71,7 @@ func (r *Room) FindProductsLists() ProductListMap {
 	if err != nil {
 		panic(err)
 	}
-  defer search.Close()
+	defer search.Close()
 
 	for search.Next() {
 		list := ProductList{}
@@ -90,13 +90,13 @@ func (r *Room) FindTabs() []Tab {
 	if err != nil {
 		panic(err)
 	}
-  defer search.Close()
+	defer search.Close()
 
 	for i := 0; search.Next(); i++ {
 		r.Tabs = append(r.Tabs, Tab{})
 		search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded, &r.Tabs[i].Table)
-    r.Tabs[i].RemoveMadedTrash()
-}
+		r.Tabs[i].RemoveMadedTrash()
+	}
 
 	return r.Tabs
 }
@@ -177,7 +177,7 @@ func RoomByItsId(id int) Room {
 	if err != nil {
 		panic(err)
 	}
-  defer search.Close()
+	defer search.Close()
 
 	if search.Next() {
 		search.Scan(&room.Id, &room.Owner)

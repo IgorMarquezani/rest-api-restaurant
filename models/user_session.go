@@ -31,7 +31,7 @@ func StartSession(u User, securePS string) (UserSession, error) {
 	if err != nil {
 		return session, err
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		rows.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
@@ -41,7 +41,7 @@ func StartSession(u User, securePS string) (UserSession, error) {
 }
 
 func ThereIsSession(u User) (UserSession, bool) {
-  var db = database.GetConnection()
+	var db = database.GetConnection()
 	var (
 		session UserSession
 		rows    *sql.Rows
@@ -94,7 +94,7 @@ func SessionBySecurePS(hash []byte) (UserSession, bool) {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		rows.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)

@@ -25,9 +25,9 @@ type UpdatingProduct struct {
 func InsertProduct(product Product) error {
 	db := database.GetConnection()
 
-  if product.ListName == "" {
-    product.ListName = "orphans"
-  }
+	if product.ListName == "" {
+		product.ListName = "orphans"
+	}
 
 	_, err := db.Query(database.InsertProduct,
 		product.ListName, product.ListRoom, product.Name,

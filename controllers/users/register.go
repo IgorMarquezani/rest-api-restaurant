@@ -10,7 +10,7 @@ import (
 )
 
 func Register(w http.ResponseWriter, r *http.Request) {
-  var ur models.UserRegister 
+	var ur models.UserRegister
 	json.NewDecoder(r.Body).Decode(&ur)
 
 	_, err := mail.ParseAddress(ur.User.Email)
@@ -34,16 +34,16 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  ur.User = models.SelectUser(ur.User.Email)
-  ur.User.Room = models.RoomByItsOwner(ur.User.Id)
-  if err := models.InsertProductList(models.OrphanList(uint(ur.User.Room.Id))); err != nil {
-    panic(err)
-  }
+	ur.User = models.SelectUser(ur.User.Email)
+	ur.User.Room = models.RoomByItsOwner(ur.User.Id)
+	if err := models.InsertProductList(models.OrphanList(uint(ur.User.Room.Id))); err != nil {
+		panic(err)
+	}
 
-  ur.User.ClearCriticalInfo()
+	ur.User.ClearCriticalInfo()
 
 	w.WriteHeader(http.StatusCreated)
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "    ")
-  encoder.Encode(ur.User)
+	encoder.Encode(ur.User)
 }

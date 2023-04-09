@@ -5,7 +5,7 @@ import (
 )
 
 // type RelationalObject interface {
-//   Tab  
+//   Tab
 // }
 
 type Inserter interface {

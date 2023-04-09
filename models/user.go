@@ -10,7 +10,7 @@ import (
 )
 
 const (
-  ErrNoSuchUser string = "User does not exist"
+	ErrNoSuchUser string = "User does not exist"
 )
 
 type UserRegister struct {
@@ -69,10 +69,10 @@ func (u *User) UserInvites() []Invite {
 
 	for rows.Next() {
 		invite := Invite{}
-    err := rows.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status, &invite.Permission)
-    if err != nil {
-      panic(err)
-    }
+		err := rows.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status, &invite.Permission)
+		if err != nil {
+			panic(err)
+		}
 		u.Invites = append(u.Invites, invite)
 	}
 
@@ -86,7 +86,7 @@ func (u *User) AcceptedRooms() []Room {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	u.RoomsAsGuest = make([]Room, 0)
 	for rows.Next() {
@@ -106,7 +106,7 @@ func InitUserByRoom(room int) User {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)
@@ -160,7 +160,7 @@ func UserBySessionHash(hash string) (User, error) {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img)

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-  ErrJsonFormat string = "Invalid JSON format"
+	ErrJsonFormat string = "Invalid JSON format"
 )
 
 func VerifySessionCookie(r *http.Request) (error, models.User) {
@@ -53,16 +53,16 @@ func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
 }
 
 func ValidJSONFormat(b io.ReadCloser) ([]byte, error) {
-  body, err := io.ReadAll(b)
-  if err != nil {
-    return nil, err 
-  }
+	body, err := io.ReadAll(b)
+	if err != nil {
+		return nil, err
+	}
 
-  if !json.Valid(body) {
-    return nil, errors.New(ErrJsonFormat) 
-  }
+	if !json.Valid(body) {
+		return nil, errors.New(ErrJsonFormat)
+	}
 
-  return body, nil
+	return body, nil
 }
 
 func AllowCrossOrigin(w *http.ResponseWriter, origin string) {

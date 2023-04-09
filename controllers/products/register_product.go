@@ -18,15 +18,15 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-    return
+		return
 	}
 
-  body, err := controllers.ValidJSONFormat(r.Body)
-  if err != nil {
-    http.Error(w, err.Error(), http.StatusBadRequest)
-  }
+	body, err := controllers.ValidJSONFormat(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
 
-  json.Unmarshal(body, &p)
+	json.Unmarshal(body, &p)
 	if p.ListRoom <= 0 {
 		room = models.RoomByItsId(session.ActiveRoom)
 		p.ListRoom = room.Id
@@ -61,10 +61,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		models.RoomProducts[room.Id] = make(models.Products)
 	}
 
-	models.RoomProducts[room.Id][p.Name] = p 
+	models.RoomProducts[room.Id][p.Name] = p
 
 	w.WriteHeader(http.StatusCreated)
-  encoder := json.NewEncoder(w)
-  encoder.SetIndent("", "    ")
-  encoder.Encode(p)
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "    ")
+	encoder.Encode(p)
 }

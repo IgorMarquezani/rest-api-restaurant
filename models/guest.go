@@ -11,14 +11,14 @@ type Guest struct {
 }
 
 func InsertGuest(roomId, userId, permission uint) error {
-  var db = database.GetConnection()
+	var db = database.GetConnection()
 
-  _, err := db.Query(database.InsertGuest, roomId, userId, permission)
-  if err != nil {
-    return err
-  }
+	_, err := db.Query(database.InsertGuest, roomId, userId, permission)
+	if err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
 
 func SelectGuestPermission(user, room int) int {
@@ -29,7 +29,7 @@ func SelectGuestPermission(user, room int) int {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&guest.InvintingRoom, &guest.UserId, &guest.PermissionLevel)

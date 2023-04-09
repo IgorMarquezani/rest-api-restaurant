@@ -24,9 +24,9 @@ func InsertTab(tab *Tab) error {
 		tab.Number = NextTabNumberInRoom(tab.RoomId)
 	}
 
-  if tab.PayValue == 0 {
-    tab.CalculateValue()
-  }
+	if tab.PayValue == 0 {
+		tab.CalculateValue()
+	}
 
 	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, time.Now().Local().Format("15:04:05"), tab.Table)
 	if err != nil {
@@ -62,7 +62,7 @@ func (t *Tab) FindRequests() {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	for i := 0; rows.Next(); i++ {
 		t.Requests = append(t.Requests, Request{})
@@ -84,12 +84,12 @@ func NextTabNumberInRoom(room int) int {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	for rows.Next() {
 		rows.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
 
-		if next.Number - previous.Number > 1 {
+		if next.Number-previous.Number > 1 {
 			selected.Number = previous.Number + 1
 			break
 		}
@@ -105,11 +105,11 @@ func NextTabNumberInRoom(room int) int {
 }
 
 func (tab *Tab) RemoveMadedTrash() error {
-  if len(tab.Maded) < 20 {
-    return errors.New("Too short")
-  }
+	if len(tab.Maded) < 20 {
+		return errors.New("Too short")
+	}
 
-  tab.Maded = tab.Maded[11:19]
+	tab.Maded = tab.Maded[11:19]
 
-  return nil
+	return nil
 }
