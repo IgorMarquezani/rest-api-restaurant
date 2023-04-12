@@ -91,6 +91,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  sendTabInChan(room.Id, tab)
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(tab)
 }

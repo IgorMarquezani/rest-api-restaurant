@@ -43,6 +43,7 @@ func ProductsRoutes(r *mux.Router) {
 
 func TabsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tab/register", tabs.Register).Methods(http.MethodPost)
+	r.HandleFunc("/api/tab/websocket", tabs.Websocket).Methods(http.MethodGet)
 }
 
 func InvitesRoutes(r *mux.Router) {

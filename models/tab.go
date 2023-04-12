@@ -28,7 +28,9 @@ func InsertTab(tab *Tab) error {
 		tab.CalculateValue()
 	}
 
-	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, time.Now().Local().Format("15:04:05"), tab.Table)
+  tab.Maded = time.Now().Local().Format("15:04:05")
+
+	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, tab.Maded, tab.Table)
 	if err != nil {
 		return err
 	}
