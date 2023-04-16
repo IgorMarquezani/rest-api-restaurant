@@ -2,13 +2,14 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/api/database"
 )
 
 const (
-	NoSessionErr string = "No session"
+	ErrNoSession string = "No session"
 )
 
 type UserSession struct {
@@ -69,7 +70,7 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 	var db = database.GetConnection()
 
 	if _, ok := ThereIsSession(User{Id: seesion.Who}); !ok {
-		return fmt.Errorf(NoSessionErr)
+		return fmt.Errorf(ErrNoSession)
 	}
 
 	if room.Id <= 0 {
@@ -84,6 +85,27 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 	seesion.ActiveRoom = room.Id
 
 	return nil
+}
+
+func GetUserActiveRoom(user User) (int, error) {
+  var session UserSession
+  var db = database.GetConnection()
+
+  row, err := db.Query(database.SelectSessionByUId, user.Id)
+  if err != nil {
+    panic(err)
+  }
+
+  if row.Next() {
+    err := row.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
+    if err != nil {
+      panic(err)
+    }
+
+    return session.ActiveRoom, err
+  }
+
+  return 0, errors.New(ErrNoSession)
 }
 
 func SessionBySecurePS(hash []byte) (UserSession, bool) {

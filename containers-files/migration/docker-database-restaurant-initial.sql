@@ -142,7 +142,7 @@ create table requests (
   quantity integer not null,
   PRIMARY KEY(product_name, tab_number, tab_room),
   foreign key (product_name, product_list) references products (name, list_room),
-  foreign key (tab_room, tab_number) references tabs (room, number) ON DELETE CASCADE
+  foreign key (tab_room, tab_number) references tabs (room, number) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 create or replace function update_request_tab_number()

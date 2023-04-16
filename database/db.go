@@ -56,16 +56,24 @@ const (
 	SelectProductListByRoom string = "select * from product_list where origin_room = $1;"
 
 	// QUERY FOR TABS
+  // select * from tabs where number = $1 and room = $2;
+  SelectTab        string = "select * from tabs where number = $1 and room = $2 order by number asc;"
 	SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
 	InsertTab        string = "insert into tabs (number, room, pay_value, time_maded, table_number) values ($1, $2, $3, $4, $5)"
+  // update tabs set table_number = $1 where number = 2$ and room = 3$;
+  UpdateTab        string = "update tabs set table_number = $1 where number = $2 and room = $3;"
 	DeleteTab        string = "delete from tabs where number = $1 and room = $2;"
 	SelectMaxTabId   string = "select max(number)+1 from tabs where room = $1"
 
 	// QUERY FOR REQUESTS
 	InsertRequest         string = "insert into requests values ($1, $2, $3, $4, $5);"
 	SelectRequest         string = "select * from requests where product_name = $1 and tab_number = $2 and tab_room = $3;"
+  // delete from requests where tab_room = $1 and tab_number = $2 and product_name = $3;
+  DeleteRequest         string = "delete from requests where tab_room = $1 and tab_number = $2 and product_name = $3;"
+  // delete from requests where tab_room = $1 and tab_number = $2;
 	DeleteRequestsInTab   string = "delete from requests where tab_room = $1 and tab_number = $2;"
-	SelectRequestsInTab   string = "select * from requests where tab_room = $1 and tab_number = $2"
+  // select * from requests where tab_room = $1 and tab_number = $2 order by tab_number asc;
+	SelectRequestsInTab   string = "select * from requests where tab_room = $1 and tab_number = $2 order by tab_number asc;" 
 	UpdateRequestQuantity string = "update requests set quantity = $1 where product_name = $2 and tab_number = $3 and tab_room = $4;"
 )
 

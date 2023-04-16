@@ -31,7 +31,7 @@ func UpdateActiveRoom(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := models.UpdateActiveRoom(&session, room); err != nil {
-		if err.Error() == models.NoSessionErr {
+		if err.Error() == models.ErrNoSession {
 			http.Error(w, "Please log in", http.StatusBadRequest)
 			return
 		}

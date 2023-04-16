@@ -30,6 +30,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+  r.Body.Close()
 
 	json.Unmarshal(body, &tab)
 
@@ -71,7 +72,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		err := models.InsertRequest(tab, tab.Requests[i])
 		if err != nil && database.IsDuplicateKeyError(err.Error()) {
 			request := models.SelectRequest(tab.Requests[i].ProductName, tab.Number, tab.RoomId)
-			models.UpdateRequestQuantity(request, uint(request.Quantity+tab.Requests[i].Quantity))
+			models.UpdateRequestQuantity(request, uint(request.Quantity + tab.Requests[i].Quantity))
 			howManyIsertions++
 			continue
 		}

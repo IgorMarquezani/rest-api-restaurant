@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
+	"strconv"
 
 	"github.com/api/database"
 	"github.com/api/models"
@@ -72,6 +74,21 @@ func init() {
 }
 
 func main() {
+	var (
+		max int = runtime.NumCPU()
+		err error
+	)
+
+	if len(os.Args) > 1 {
+		max, err = strconv.Atoi(os.Args[1])
+		if err != nil {
+			fmt.Println("Invalid number for max threads")
+		} else {
+			runtime.GOMAXPROCS(max)
+		}
+	}
+
 	fmt.Println("Initializing API for Fatec project")
+	fmt.Printf("Running with a total of %d threads available\n", max)
 	routes.HandleRequest()
 }

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -20,6 +21,7 @@ func UserRoutes(r *mux.Router) {
 	r.Handle("/api/user/login", users.Login{}).Methods(http.MethodPost)
 	r.Handle("/api/user/auth", session.HandleAuthentication{}).Methods(http.MethodPost)
 	r.HandleFunc("/api/user/full-info", users.FullInfo).Methods(http.MethodGet, http.MethodPost)
+  r.HandleFunc("/api/user/with-active-room-products", users.WithActiveRoom).Methods(http.MethodGet)
 }
 
 func SessionsRoutes(r *mux.Router) {
@@ -43,6 +45,9 @@ func ProductsRoutes(r *mux.Router) {
 
 func TabsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tab/register", tabs.Register).Methods(http.MethodPost)
+	r.HandleFunc("/api/tab/delete/{number}/{room}", tabs.Delete).Methods(http.MethodDelete)
+	r.HandleFunc("/api/tab/delete/{number}", tabs.Delete).Methods(http.MethodDelete)
+  r.HandleFunc("/api/tab/update", tabs.Update).Methods(http.MethodPut)
 	r.HandleFunc("/api/tab/websocket", tabs.Websocket).Methods(http.MethodGet)
 }
 
@@ -63,5 +68,6 @@ func HandleRequest() {
 	UserRoutes(r)
 	TabsRoutes(r)
 
+  fmt.Println("Listening on localhost:3300")
 	log.Fatal(http.ListenAndServe(":3300", r))
 }

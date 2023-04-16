@@ -14,6 +14,16 @@ type Request struct {
 	Quantity        int    `json:"quantity"`
 }
 
+type UpdatingRequest struct {
+	TabRoom         int    `json:"tab_room"`
+	TabNumber       int    `json:"tab_number"`
+	ProductName     string `json:"product_name"`
+	ProductListRoom int    `json:"product_list"`
+	Quantity        int    `json:"quantity"`
+
+	Operation string `json:"operation"`
+}
+
 func InsertRequest(tab Tab, request Request) error {
 	if request.ProductListRoom == 0 {
 		request.ProductListRoom = tab.RoomId
@@ -62,6 +72,15 @@ func UpdateRequestQuantity(request Request, quantity uint) error {
 	}
 
 	return nil
+}
+
+func DeleteRequest(number, roomId int, productName string) {
+	var db = database.GetConnection()
+
+	_, err := db.Query(database.DeleteRequest, roomId, number, productName)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func DeleteRequestsInTab(tab Tab) error {

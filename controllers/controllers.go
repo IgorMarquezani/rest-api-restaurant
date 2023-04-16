@@ -52,8 +52,8 @@ func VerifySession(r *http.Request) (error, models.User, models.UserSession) {
 	return nil, user, session
 }
 
-func ValidJSONFormat(b io.ReadCloser) ([]byte, error) {
-	body, err := io.ReadAll(b)
+func ValidJSONFormat(reader io.ReadCloser) ([]byte, error) {
+	body, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
