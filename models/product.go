@@ -6,6 +6,19 @@ import (
 	"github.com/api/database"
 )
 
+const (
+	ErrNoSuchProduct    = "No such product in this room"
+	ErrProductNameAlreadyUsed  = "Name already used in this room"
+	ErrEmptyProductName = "Product Name is empty"
+	ErrProductStillUsed = "There is one or more request on some tab(s) that is using this(e) product(s)"
+)
+
+type ProductErr struct {
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+  Products []string `json:"products"`
+}
+
 type Products map[string]Product
 
 type Product struct {
@@ -15,11 +28,6 @@ type Product struct {
 	Price       float64 `json:"price"`
 	Description []byte  `json:"description"`
 	Image       []byte  `json:"image"`
-}
-
-type UpdatingProduct struct {
-	New Product `json:"new_product"`
-	Old Product `json:"old_product"`
 }
 
 func InsertProduct(product Product) error {
@@ -36,12 +44,12 @@ func InsertProduct(product Product) error {
 	return err
 }
 
-func UpdateProduct(both UpdatingProduct, productList ProductList) error {
+func UpdateProduct(New, Old Product, roomId int) error {
 	db := database.GetConnection()
 
 	_, err := db.Query(database.UpdateProduct,
-		both.New.Name, both.New.Price, both.New.Description,
-		both.New.Image, productList.Room, both.Old.Name)
+		New.Name, New.Price, New.Description,
+		New.Image, roomId, Old.Name)
 
 	return err
 }
@@ -55,25 +63,26 @@ func DeleteProduct(product Product) error {
 }
 
 func SelectOneProduct(room int, name string) (Product, error) {
-	var p Product
-	var db = database.GetConnection()
+	var (
+		product Product
+		db      = database.GetConnection()
+	)
 
 	rows, err := db.Query(database.SelectProduct, name, room)
 	if err != nil {
-		return p, err
+		return product, err
 	}
 	defer rows.Close()
 
 	if rows.Next() {
-		err := rows.Scan(&p.ListName, &p.ListRoom, &p.Name, &p.Price, &p.Description, &p.Image)
+		err := rows.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &product.Description, &product.Image)
 		if err != nil {
-			return Product{}, err
+			return product, err
 		}
-	} else {
-		return Product{}, errors.New(database.ErrNotfound)
-	}
 
-	return p, nil
+		return product, nil
+	}
+	return product, errors.New(ErrNoSuchProduct)
 }
 
 func SelectProductByHisList(productName string, listRoom int) (error, Product) {
@@ -108,24 +117,4 @@ func (p *Product) Exists() bool {
 	}
 
 	return true
-}
-
-func (up *UpdatingProduct) IsIncompatible() error {
-	if up.New.ListRoom == 0 || up.Old.ListRoom == 0 {
-		return errors.New("One of the products is missing his room id")
-	}
-
-	if up.New.ListName == "" || up.Old.ListName == "" {
-		return errors.New("One of the products is missing his room name")
-	}
-
-	if up.New.ListName != up.Old.ListName {
-		return errors.New("Incompatible lists names between products")
-	}
-
-	if up.New.ListRoom != up.Old.ListRoom {
-		return errors.New("Incompatible rooms id between products")
-	}
-
-	return nil
 }

@@ -4,6 +4,10 @@ import (
 	"github.com/api/database"
 )
 
+const (
+  ErrInsufficientPermission = "Does not have permission for this operation"
+)
+
 type ProductsInRoom map[int]Products
 
 var RoomProducts ProductsInRoom
@@ -27,8 +31,8 @@ func MustInsertRoom(userId uint) {
 }
 
 /*
-Don't ever call this function without filling the Id field
-unless you want to update the Guests field don't call that function again
+Don't ever call this function without filling the Id field.
+Unless you want to update the Guests field don't call that function again
 instead of this, acess the struct field named "Guests"
 */
 func (r *Room) FindGuests() GuestMap {
@@ -55,6 +59,7 @@ func (r *Room) FindGuests() GuestMap {
 		if err := rows.Scan(&u.Id, &u.Name, &u.Email, &u.Passwd, &u.Img); err != nil {
 			panic(err)
 		}
+
 		u.ClearCriticalInfo()
 		r.Guests[u.Email] = u
 	}

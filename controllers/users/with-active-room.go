@@ -1,7 +1,6 @@
 package users
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/api/controllers"
@@ -20,7 +19,7 @@ func WithActiveRoom(w http.ResponseWriter, r *http.Request)  {
 	user.Room.FindGuests()
 	user.Room.FindProductsLists()
 
-	// Finding all products in product list
+	// Finding all products in products list
 	for i := range user.Room.ProductsList {
 		user.Room.ProductsList[i] = models.FindProductsInList(user.Room.ProductsList[i])
 	}
@@ -30,7 +29,5 @@ func WithActiveRoom(w http.ResponseWriter, r *http.Request)  {
 	user.UserInvites()
 
 	w.WriteHeader(http.StatusOK)
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "    ")
-	encoder.Encode(user)
+  controllers.EncodeJSON(w, user)
 }

@@ -17,7 +17,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		room   models.Room
 	)
 
-	controllers.AllowCrossOrigin(&w, "*")
+	controllers.AllowCrossOrigin(&w, r.Header.Get("Origin"))
 
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {

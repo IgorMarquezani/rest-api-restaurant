@@ -1,13 +1,11 @@
 package products
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/api/controllers"
-	"github.com/api/database"
 	"github.com/api/models"
 	"github.com/gorilla/mux"
 )
@@ -23,13 +21,13 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	name := mux.Vars(r)["name"]
 	if name == "" {
-		http.Error(w, "Wrong query parameter", http.StatusBadRequest)
+		http.Error(w, "Invalid name parameter", http.StatusBadRequest)
 		return
 	}
 
 	idStr := mux.Vars(r)["room"]
 	id, err := strconv.Atoi(idStr)
-	if err != nil {
+	if err != nil && idStr != "" {
 		http.Error(w, "Invalid room id", http.StatusBadRequest)
 		return
 	}
@@ -42,15 +40,20 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	if !room.IsOwner(user) {
 		if !room.IsGuest(user) {
-			http.Error(w, "Not a guest", http.StatusUnauthorized)
+			http.Error(w, models.ErrNotAGuest, http.StatusForbidden)
 			return
 		}
+
+    if room.GuestPermission(user) < 2 {
+			http.Error(w, models.ErrInvalidPermission, http.StatusForbidden)
+			return
+    }
 	}
 
-	p, err := models.SelectOneProduct(room.Id, name)
+	product, err := models.SelectOneProduct(room.Id, name)
 	if err != nil {
-		if err.Error() == database.ErrNotfound {
-			http.Error(w, err.Error(), http.StatusNoContent)
+		if err.Error() == models.ErrNoSuchProduct {
+			http.Error(w, models.ErrNoSuchProduct, http.StatusNotFound)
 			return
 		}
 
@@ -60,7 +63,5 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "    ")
-	encoder.Encode(p)
+	controllers.EncodeJSON(w, product)
 }

@@ -11,8 +11,8 @@ import (
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var (
-		p    models.Product
-		room models.Room
+		product models.Product
+		room    models.Room
 	)
 
 	err, user, session := controllers.VerifySession(r)
@@ -26,30 +26,29 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	json.Unmarshal(body, &p)
-	if p.ListRoom <= 0 {
+	json.Unmarshal(body, &product)
+	if product.ListRoom <= 0 {
 		room = models.RoomByItsId(session.ActiveRoom)
-		p.ListRoom = room.Id
+		product.ListRoom = room.Id
 	} else {
-		room = models.RoomByItsId(p.ListRoom)
-		p.ListRoom = room.Id
+		room = models.RoomByItsId(product.ListRoom)
 	}
 
 	if !room.IsOwner(user) {
 		if !room.IsGuest(user) {
-			http.Error(w, "You are not a guest", http.StatusBadRequest)
+			http.Error(w, models.ErrNotAGuest, http.StatusBadRequest)
 			return
 		}
 
 		if room.GuestPermission(user) < 2 {
-			http.Error(w, "You do not have permission for this operation", http.StatusUnauthorized)
+			http.Error(w, models.ErrInvalidPermission, http.StatusUnauthorized)
 			return
 		}
 	}
 
-	if err := models.InsertProduct(p); err != nil {
+	if err := models.InsertProduct(product); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
-			http.Error(w, "Product name already in use", http.StatusAlreadyReported)
+			http.Error(w, models.ErrProductNameAlreadyUsed, http.StatusAlreadyReported)
 			return
 		}
 
@@ -61,10 +60,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		models.RoomProducts[room.Id] = make(models.Products)
 	}
 
-	models.RoomProducts[room.Id][p.Name] = p
+	models.RoomProducts[room.Id][product.Name] = product
 
 	w.WriteHeader(http.StatusCreated)
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "    ")
-	encoder.Encode(p)
+	controllers.EncodeJSON(w, product)
 }

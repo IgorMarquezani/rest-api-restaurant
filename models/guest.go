@@ -2,6 +2,10 @@ package models
 
 import "github.com/api/database"
 
+const (
+  ErrNotAGuest = "Not a guest in this room"
+)
+
 type GuestMap map[string]User
 
 type Guest struct {

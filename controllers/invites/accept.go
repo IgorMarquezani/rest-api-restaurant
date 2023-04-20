@@ -22,13 +22,13 @@ func Accept(w http.ResponseWriter, r *http.Request) {
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid invite id", http.StatusBadRequest)
+		http.Error(w, "Invalid invite id", http.StatusNotFound)
 		return
 	}
 
-	invite, ok := models.SearchFor(user.UserInvites(), id)
+	invite, ok := models.SearchForInvites(user.UserInvites(), id)
 	if !ok {
-		http.Error(w, models.ErrNoSuchInvite, http.StatusBadRequest)
+		http.Error(w, models.ErrNoSuchInvite, http.StatusNotFound)
 		return
 	}
 

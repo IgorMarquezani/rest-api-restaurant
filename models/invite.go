@@ -66,7 +66,7 @@ func SelectInvite(user User, room Room) (Invite, error) {
 	return invite, nil
 }
 
-func SearchFor(v []Invite, id int) (Invite, bool) {
+func SearchForInvites(v []Invite, id int) (Invite, bool) {
 	for _, invite := range v {
 		if invite.Id == id {
 			return invite, true

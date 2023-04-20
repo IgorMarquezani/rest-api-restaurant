@@ -8,7 +8,9 @@ import (
 )
 
 const (
+  // No such tab in this room
 	ErrNoSuchTab        string = "No such tab in this room"
+  // Invalid number for request
 	ErrInvalidTabNumber string = "Invalid number for request"
 )
 
@@ -29,7 +31,7 @@ type UpdatingTab struct {
 	Maded    string  `json:"time_maded"`
 	Table    int     `json:"table"`
 
-  Requests []UpdatingRequest `json:"requests"`
+	Requests []UpdatingRequest `json:"requests"`
 }
 
 func SelectTabByNumber(number, roomId int) (Tab, error) {
@@ -40,12 +42,14 @@ func SelectTabByNumber(number, roomId int) (Tab, error) {
 	if err != nil {
 		panic(err)
 	}
+  defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&tab.Number, &tab.RoomId, &tab.PayValue, &tab.Maded, &tab.Table)
 		if err != nil {
 			panic(err)
 		}
+
 		return tab, nil
 	}
 
@@ -65,7 +69,9 @@ func InsertTab(tab *Tab) error {
 		tab.CalculateValue()
 	}
 
-	tab.Maded = time.Now().Local().Format("15:04:05")
+  if _, err := time.Parse("15:04:05", tab.Maded); err != nil {
+	  tab.Maded = time.Now().Local().Format("15:04:05")
+  }
 
 	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, tab.Maded, tab.Table)
 	if err != nil {
@@ -145,11 +151,11 @@ func (t *Tab) SortRequest() []Request {
 }
 
 func NextTabNumberInRoom(room int) int {
-	var db = database.GetConnection()
 	var (
 		selected Tab
 		previous Tab
 		next     Tab
+		db       = database.GetConnection()
 	)
 
 	rows, err := db.Query(database.SelectTabsInRoom, room)

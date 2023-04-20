@@ -20,8 +20,11 @@ func UserRoutes(r *mux.Router) {
 	r.HandleFunc("/api/user/register", users.Register).Methods(http.MethodPost)
 	r.Handle("/api/user/login", users.Login{}).Methods(http.MethodPost)
 	r.Handle("/api/user/auth", session.HandleAuthentication{}).Methods(http.MethodPost)
+
 	r.HandleFunc("/api/user/full-info", users.FullInfo).Methods(http.MethodGet, http.MethodPost)
   r.HandleFunc("/api/user/with-active-room-products", users.WithActiveRoom).Methods(http.MethodGet)
+
+  r.HandleFunc("/api/user/invites", users.Invites).Methods(http.MethodGet)
 }
 
 func SessionsRoutes(r *mux.Router) {
@@ -39,15 +42,23 @@ func ProdListRoutes(r *mux.Router) {
 
 func ProductsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/product/register", products.Register).Methods(http.MethodPost)
-	r.Handle("/api/product/update", products.UpdateProduct{}).Methods(http.MethodPut)
-	r.HandleFunc("/api/product/{name}/{room}", products.GetProduct).Methods(http.MethodGet)
+
+	r.HandleFunc("/api/product/update/{old-name}", products.Update).Methods(http.MethodPut, http.MethodPost)
+
+	r.HandleFunc("/api/product/select/{name}/{room}", products.GetProduct).Methods(http.MethodGet)
+	r.HandleFunc("/api/product/select/{name}", products.GetProduct).Methods(http.MethodGet)
+
+  r.HandleFunc("/api/product/delete/{name}", products.Delete).Methods(http.MethodDelete)
 }
 
 func TabsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tab/register", tabs.Register).Methods(http.MethodPost)
+
+  r.HandleFunc("/api/tab/update", tabs.Update).Methods(http.MethodPut)
+
 	r.HandleFunc("/api/tab/delete/{number}/{room}", tabs.Delete).Methods(http.MethodDelete)
 	r.HandleFunc("/api/tab/delete/{number}", tabs.Delete).Methods(http.MethodDelete)
-  r.HandleFunc("/api/tab/update", tabs.Update).Methods(http.MethodPut)
+
 	r.HandleFunc("/api/tab/websocket", tabs.Websocket).Methods(http.MethodGet)
 }
 

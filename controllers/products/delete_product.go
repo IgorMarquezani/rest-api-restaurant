@@ -1,49 +1,68 @@
 package products
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/api/controllers"
+	"github.com/api/database"
 	"github.com/api/models"
+	"github.com/gorilla/mux"
 )
 
-type DeleteProduct struct {
-	product  models.Product
-	jsonRoom models.Room
-}
+func Delete(w http.ResponseWriter, r *http.Request) {
+	var (
+		product models.Product
+		room    models.Room
+	)
 
-func (dp DeleteProduct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err, user, _ := controllers.VerifySession(r)
+	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	user.Room = models.RoomByItsOwner(user.Id)
-
-	json.NewDecoder(r.Body).Decode(&dp.product)
-
-	dp.jsonRoom = models.RoomByItsId(dp.product.ListRoom)
-	dp.jsonRoom.FindGuests()
-
-	if !dp.jsonRoom.IsOwner(user) {
-		if !dp.jsonRoom.IsGuest(user) {
-			http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
-			return
-		}
-
-		if dp.jsonRoom.GuestPermission(user) < 2 {
-			http.Error(w, "Don't have permission for this operation", http.StatusUnauthorized)
-			return
-		}
-	}
-
-	if err := models.DeleteProduct(dp.product); err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	productName := mux.Vars(r)["name"]
+	if productName == "" {
+		http.Error(w, models.ErrEmptyProductName, http.StatusBadRequest)
 		return
 	}
 
+	room = models.RoomByItsId(session.ActiveRoom)
+
+	product, err = models.SelectOneProduct(room.Id, productName)
+	if err != nil {
+		http.Error(w, models.ErrNoSuchProduct, http.StatusNoContent)
+		return
+	}
+
+	if !room.IsOwner(user) {
+		if !room.IsGuest(user) {
+			http.Error(w, models.ErrNotAGuest, http.StatusUnauthorized)
+			return
+		}
+
+		if room.GuestPermission(user) < 2 {
+			http.Error(w, models.ErrInsufficientPermission, http.StatusUnauthorized)
+			return
+		}
+	}
+
+	if err := models.DeleteProduct(product); err != nil {
+		if database.IsForeignKeyConstraintError(err.Error()) {
+			deleteErr := models.ProductErr{
+				Title:    "Cannot delete used(s) product(s)",
+				Detail:   models.ErrProductStillUsed,
+				Products: []string{product.Name},
+			}
+
+			w.WriteHeader(http.StatusConflict)
+			controllers.EncodeJSON(w, deleteErr)
+			return
+		}
+
+    http.Error(w, "Internal server error", http.StatusInternalServerError)
+    return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(dp.product)
 }

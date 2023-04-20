@@ -7,64 +7,62 @@ import (
 	"github.com/api/controllers"
 	"github.com/api/database"
 	"github.com/api/models"
+	"github.com/gorilla/mux"
 )
 
-type UpdateProduct struct {
-	bothProducts models.UpdatingProduct
-	productList  models.ProductList
-	jsonRoom     models.Room
-}
+func Update(w http.ResponseWriter, r *http.Request) {
+	var (
+		oldProduct models.Product
+		newProduct models.Product
+		room       models.Room
+	)
 
-func (up UpdateProduct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var err, user = controllers.VerifySessionCookie(r)
+	err, user, session := controllers.VerifySession(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	user.Room = models.RoomByItsOwner(user.Id)
-
-	json.NewDecoder(r.Body).Decode(&up.bothProducts)
-
-	if err := up.bothProducts.IsIncompatible(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	up.productList.Name = up.bothProducts.Old.ListName
-	up.productList.Room = up.bothProducts.Old.ListRoom
-
-	if !up.productList.Exists() {
-		http.Error(w, "No such product list", http.StatusBadRequest)
+	body, err := controllers.ValidJSONFormat(r.Body)
+	if err != nil {
+		http.Error(w, controllers.ErrJsonFormat, http.StatusBadRequest)
 		return
 	}
 
-	if !up.productList.IsOnProductList(up.bothProducts.Old) {
-		http.Error(w, "No such product to be update", http.StatusBadRequest)
-		return
+	json.Unmarshal(body, &newProduct)
+  if newProduct.Name == "" {
+    http.Error(w, models.ErrEmptyProductName, http.StatusExpectationFailed)
+    return
+  }
+
+	if newProduct.ListRoom <= 0 {
+		room = models.RoomByItsId(session.ActiveRoom)
+		newProduct.ListRoom = room.Id
+	} else {
+		room = models.RoomByItsId(newProduct.ListRoom)
 	}
 
-	up.jsonRoom = models.RoomByItsId(up.bothProducts.Old.ListRoom)
-
-	if !up.jsonRoom.IsOwner(user) {
-		if !up.jsonRoom.IsGuest(user) {
-			http.Error(w, "You are not a guest in that room", http.StatusUnauthorized)
+	if !room.IsOwner(user) {
+		if !room.IsGuest(user) {
+			http.Error(w, models.ErrNotAGuest, http.StatusUnauthorized)
 			return
 		}
 
-		if up.jsonRoom.GuestPermission(user) < 2 {
-			http.Error(w, "You do not have permission for this operation", http.StatusUnauthorized)
+		if room.GuestPermission(user) < 2 {
+			http.Error(w, models.ErrInsufficientPermission, http.StatusUnauthorized)
 			return
 		}
 	}
 
-	if !up.bothProducts.Old.Exists() {
-		http.Error(w, "No such product to be updated", http.StatusNotFound)
+	oldProduct, err = models.SelectOneProduct(room.Id, mux.Vars(r)["old-name"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusFound)
 		return
 	}
 
-	if err := models.UpdateProduct(up.bothProducts, up.productList); err != nil {
+	if err := models.UpdateProduct(newProduct, oldProduct, room.Id); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
-			http.Error(w, "Name already in use", http.StatusAlreadyReported)
+			http.Error(w, models.ErrProductNameAlreadyUsed, http.StatusAlreadyReported)
 			return
 		}
 
@@ -73,5 +71,4 @@ func (up UpdateProduct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(up.bothProducts.New)
 }

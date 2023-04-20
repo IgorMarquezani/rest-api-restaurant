@@ -10,56 +10,56 @@ import (
 
 type Inserter interface {
 	InsertQuery() string
-	Param() []any
+	InsertParam() []any
+}
+
+func Insert(inserter Inserter) error {
+	db := database.GetConnection()
+
+	_, err := db.Query(inserter.InsertQuery(), inserter.InsertParam()...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type Updater interface {
+	UpdateQuery() string
+	UpdateParam() []any
+}
+
+func Update(updater Updater) error {
+	db := database.GetConnection()
+
+	_, err := db.Query(updater.UpdateQuery(), updater.UpdateParam()...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type Deleter interface {
+	DeleteQuery() string
+	DeleteParam() []any
+}
+
+func Delete(deleter Deleter) error {
+	db := database.GetConnection()
+
+	_, err := db.Query(deleter.DeleteQuery(), deleter.DeleteParam()...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Selector interface {
 	SelectQuery() string
 	Param() []any
 	NumberOfFields() int
-}
-
-type Updater interface {
-	UpdateQuery() string
-	Param() []any
-}
-
-type Deleter interface {
-	DeleteQuery() string
-	Param() []any
-}
-
-func Insert(i Inserter) error {
-	db := database.GetConnection()
-
-	_, err := db.Query(i.InsertQuery(), i.Param()...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func Update(u Updater) error {
-	db := database.GetConnection()
-
-	_, err := db.Query(u.UpdateQuery(), u.Param()...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func Delete(d Deleter) error {
-	db := database.GetConnection()
-
-	_, err := db.Query(d.DeleteQuery(), d.Param()...)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // func Select[T RelationalObject](s Selector) ([]T, error) {

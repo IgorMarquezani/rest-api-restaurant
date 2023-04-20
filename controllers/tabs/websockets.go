@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/api/controllers"
@@ -12,40 +13,36 @@ import (
 	"nhooyr.io/websocket"
 )
 
-var acceptOptions websocket.AcceptOptions = websocket.AcceptOptions{
-	OriginPatterns: []string{"localhost:8081"},
-}
-
 type tabsChan chan models.Tab
 
-type roomTabsChan map[int]tabsChan
+type roomsTabsChan map[int]tabsChan
 
-var websocketsChan roomTabsChan = make(roomTabsChan)
+var websocketsChan roomsTabsChan = make(roomsTabsChan)
 
 var mutex sync.Mutex
 
 func newTabsChan(roomId int) tabsChan {
-  var (
-    ch tabsChan
-    ok bool
-  )
+	var (
+		ch tabsChan
+		ok bool
+	)
 
 	mutex.Lock()
-  if ch, ok = websocketsChan[roomId]; !ok {
+	if ch, ok = websocketsChan[roomId]; !ok {
 		websocketsChan[roomId] = make(tabsChan, 20)
-    ch = websocketsChan[roomId]
-  }
+		ch = websocketsChan[roomId]
+	}
 
 	mutex.Unlock()
 	return ch
 }
 
 func sendTabInChan(roomId int, tab models.Tab) {
-	if _, ok := websocketsChan[roomId]; !ok {
-		newTabsChan(roomId)
+	if ch, ok := websocketsChan[roomId]; !ok {
+		return
+	} else {
+		ch <- tab
 	}
-
-	websocketsChan[roomId] <- tab
 }
 
 func Websocket(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +54,10 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c, err := websocket.Accept(w, r, &acceptOptions)
+  option := strings.Split(r.Header.Get("Origin"), "/")[2]
+  options := &websocket.AcceptOptions{OriginPatterns: []string{option}}
+
+  c, err := websocket.Accept(w, r, options)
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +66,7 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = c.Write(ctx, websocket.MessageText, []byte("hello websocket"))
+	err = c.Write(ctx, websocket.MessageText, []byte("hello browser"))
 	if err != nil {
 		panic(err)
 	}
@@ -84,12 +84,15 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 			data, err := json.Marshal(tab)
 			if err != nil {
 				log.Println("Error: ", err.Error())
+				c.Write(ctx, websocket.MessageText, []byte(err.Error()))
+				continue
 			}
 
 			err = c.Write(ctx, websocket.MessageText, data)
 			if err != nil {
 				log.Println("Error: ", err.Error())
 			}
+
 		case <-ctx.Done():
 			log.Println("Closing")
 			c.Close(websocket.StatusGoingAway, "Closing connection")

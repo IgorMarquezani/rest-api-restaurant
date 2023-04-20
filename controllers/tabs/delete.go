@@ -11,7 +11,9 @@ import (
 )
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	controllers.AllowCrossOrigin(&w, "*")
+	controllers.AllowCrossOrigin(&w, r.Header.Get("Origin"))
+  w.Header().Set("Acess-Control-Allow-Credentials", "true")
+  log.Println(w.Header())
 
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {

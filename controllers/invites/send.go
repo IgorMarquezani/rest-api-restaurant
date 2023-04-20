@@ -61,7 +61,7 @@ func Send(w http.ResponseWriter, r *http.Request) {
 
 	target = models.SelectUser(email)
 	if target.Id == 0 {
-		http.Error(w, models.ErrNoSuchUser, http.StatusBadRequest)
+		http.Error(w, models.ErrNoSuchUser, http.StatusNotFound)
 		return
 	}
 
@@ -71,7 +71,7 @@ func Send(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if invite, _ := models.SelectInvite(target, room); invite.Id != 0 {
-		http.Error(w, models.ErrInvitedAlready, http.StatusBadRequest)
+		http.Error(w, models.ErrInvitedAlready, http.StatusAlreadyReported)
 		return
 	}
 

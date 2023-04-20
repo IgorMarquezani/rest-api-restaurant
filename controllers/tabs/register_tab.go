@@ -16,36 +16,32 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		room             models.Room
 	)
 
-	// if flusher, ok := w.(http.Flusher); ok {
-	//   flusher.Flush()
-	// }
+	controllers.AllowCrossOrigin(&w, r.Header.Get("Origin"))
+	w.Header().Set("Acess-Control-Allow-Credentials", "true")
 
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
 	}
 
 	body, err := controllers.ValidJSONFormat(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "JSON format error: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-  r.Body.Close()
+	r.Body.Close()
 
 	json.Unmarshal(body, &tab)
 
-	room = models.RoomByItsId(tab.RoomId)
+	tab.PayValue = 0
 
-	if room.Id == 0 {
+	if tab.RoomId <= 0 {
 		room = models.RoomByItsId(session.ActiveRoom)
 		tab.RoomId = room.Id
+	} else {
+		room = models.RoomByItsId(tab.RoomId)
 	}
-
-	if tab.PayValue != 0 {
-		tab.PayValue = 0
-	}
-
-	controllers.AllowCrossOrigin(&w, "*")
 
 	if !room.IsOwner(user) {
 		if !room.IsGuest(user) {
@@ -72,7 +68,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		err := models.InsertRequest(tab, tab.Requests[i])
 		if err != nil && database.IsDuplicateKeyError(err.Error()) {
 			request := models.SelectRequest(tab.Requests[i].ProductName, tab.Number, tab.RoomId)
-			models.UpdateRequestQuantity(request, uint(request.Quantity + tab.Requests[i].Quantity))
+			models.UpdateRequestQuantity(request, uint(request.Quantity+tab.Requests[i].Quantity))
 			howManyIsertions++
 			continue
 		}
@@ -92,8 +88,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  sendTabInChan(room.Id, tab)
+	sendTabInChan(room.Id, tab)
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(tab)
+	controllers.EncodeJSON(w, tab)
 }

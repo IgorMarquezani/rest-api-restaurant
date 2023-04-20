@@ -65,6 +65,12 @@ func ValidJSONFormat(reader io.ReadCloser) ([]byte, error) {
 	return body, nil
 }
 
+func EncodeJSON(w io.Writer, data any) {
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "    ")
+	encoder.Encode(data)
+}
+
 func AllowCrossOrigin(w *http.ResponseWriter, origin string) {
 	(*w).Header().Set("Access-Control-Allow-Origin", origin)
 	(*w).Header().Set("Access-Control-Allow-Headers", "Origin")
