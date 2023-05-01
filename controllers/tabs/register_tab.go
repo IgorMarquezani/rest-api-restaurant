@@ -34,14 +34,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	json.Unmarshal(body, &tab)
 
-	tab.PayValue = 0
+	room = models.RoomByItsId(session.ActiveRoom)
 
-	if tab.RoomId <= 0 {
-		room = models.RoomByItsId(session.ActiveRoom)
-		tab.RoomId = room.Id
-	} else {
-		room = models.RoomByItsId(tab.RoomId)
-	}
+	tab.RoomId = room.Id
+	tab.PayValue = 0
 
 	if !room.IsOwner(user) {
 		if !room.IsGuest(user) {
@@ -88,7 +84,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendTabInChan(room.Id, tab)
+	SendTabToRoom(room.Id, tab)
 
 	w.WriteHeader(http.StatusCreated)
 	controllers.EncodeJSON(w, tab)

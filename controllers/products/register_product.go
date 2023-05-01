@@ -27,6 +27,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.Unmarshal(body, &product)
+  if product.Name == "" {
+    http.Error(w, "Cannot register a product with empty name", http.StatusBadRequest)
+    return
+  }
+
 	if product.ListRoom <= 0 {
 		room = models.RoomByItsId(session.ActiveRoom)
 		product.ListRoom = room.Id
@@ -47,6 +52,16 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := models.InsertProduct(product); err != nil {
+    if database.IsForeignKeyConstraintError(err.Error()) {
+      list := models.ProductList {
+        Room: product.ListRoom,
+        Name: product.ListName,
+      }
+
+      models.InsertProductList(list)
+      models.InsertProduct(product)
+    }
+
 		if database.IsDuplicateKeyError(err.Error()) {
 			http.Error(w, models.ErrProductNameAlreadyUsed, http.StatusAlreadyReported)
 			return
@@ -55,12 +70,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
-	if _, ok := models.RoomProducts[room.Id]; !ok {
-		models.RoomProducts[room.Id] = make(models.Products)
-	}
-
-	models.RoomProducts[room.Id][product.Name] = product
 
 	w.WriteHeader(http.StatusCreated)
 	controllers.EncodeJSON(w, product)

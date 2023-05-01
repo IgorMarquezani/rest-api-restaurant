@@ -66,9 +66,22 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if database.IsForeignKeyConstraintError(err.Error()) {
+			deleteErr := models.ProductErr{
+				Title:    "Cannot update used(s) product(s)",
+				Detail:   models.ErrProductStillUsed,
+				Products: []string{oldProduct.Name},
+			}
+
+			w.WriteHeader(http.StatusConflict)
+			controllers.EncodeJSON(w, deleteErr)
+			return
+    }
+
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+  controllers.EncodeJSON(w, newProduct)
 }

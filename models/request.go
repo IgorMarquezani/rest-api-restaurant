@@ -35,10 +35,11 @@ func InsertRequest(tab Tab, request Request) error {
 
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.InsertRequest, tab.RoomId, tab.Number, request.ProductName, request.ProductListRoom, request.Quantity)
+	insert, err := db.Query(database.InsertRequest, tab.RoomId, tab.Number, request.ProductName, request.ProductListRoom, request.Quantity)
 	if err != nil {
 		return err
 	}
+  insert.Close()
 
 	return nil
 }
@@ -66,10 +67,11 @@ func SelectRequest(productName string, tabNumber, roomId int) Request {
 func UpdateRequestQuantity(request Request, quantity uint) error {
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.UpdateRequestQuantity, quantity, request.ProductName, request.TabNumber, request.TabRoom)
+	update, err := db.Query(database.UpdateRequestQuantity, quantity, request.ProductName, request.TabNumber, request.TabRoom)
 	if err != nil {
 		panic(err)
 	}
+  update.Close()
 
 	return nil
 }
@@ -77,19 +79,21 @@ func UpdateRequestQuantity(request Request, quantity uint) error {
 func DeleteRequest(number, roomId int, productName string) {
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.DeleteRequest, roomId, number, productName)
+	del, err := db.Query(database.DeleteRequest, roomId, number, productName)
 	if err != nil {
 		panic(err)
 	}
+  del.Close()
 }
 
 func DeleteRequestsInTab(tab Tab) error {
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.DeleteRequestsInTab, tab.RoomId, tab.Number)
+	del, err := db.Query(database.DeleteRequestsInTab, tab.RoomId, tab.Number)
 	if err != nil {
 		panic(err)
 	}
+  del.Close()
 
 	return nil
 }

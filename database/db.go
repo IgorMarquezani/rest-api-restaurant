@@ -54,15 +54,15 @@ const (
   // select * from products where name = $1 and list_room = $2;
 	SelectProduct        string = "select * from products where name = $1 and list_room = $2;"
   // select (products.*) from products join product_list on products.list_name = product_list.name and products.list_room = product_list.origin_room where product_list.name = $1 and product_list.origin_room = $2;
-	SelectProductsByList string = "select (products.*) from products join product_list on products.list_name = product_list.name and products.list_room = product_list.origin_room where product_list.name = $1 and product_list.origin_room = $2;"
+	SelectProductsByList string = "select (products.*) from products join product_list on products.list_name = product_list.name and products.list_room = product_list.origin_room where product_list.name = $1 and product_list.origin_room = $2 order by products.name;"
   // select (products.*) from products join rooms on products.list_room = rooms.id where rooms.id = $1:
-	SelectProductsByRoom string = "select (products.*) from products join rooms on products.list_room = rooms.id where rooms.id = $1"
+	SelectProductsByRoom string = "select (products.*) from products join rooms on products.list_room = rooms.id where rooms.id = $1 order by products.name;"
 
 	// QUERYS FOR ROOMS
   // insert into rooms (owner) values ($1);
 	InsertRoom        string = "insert into rooms (owner) values ($1);"
   // select * from rooms;
-	SelectAllRooms    string = "select * from rooms;"
+	SelectAllRooms    string = "select * from rooms order by id;"
   // select * from rooms where owner = $1;
 	SelectRoomByOwner string = "select * from rooms where owner = $1"
   // select * from rooms where id = $1;

@@ -17,10 +17,11 @@ type Guest struct {
 func InsertGuest(roomId, userId, permission uint) error {
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.InsertGuest, roomId, userId, permission)
+	insert, err := db.Query(database.InsertGuest, roomId, userId, permission)
 	if err != nil {
 		return err
 	}
+  insert.Close()
 
 	return nil
 }

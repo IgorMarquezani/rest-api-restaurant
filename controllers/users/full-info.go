@@ -45,7 +45,6 @@ func FullInfo(w http.ResponseWriter, r *http.Request) {
   user.ActiveRoom, _ = models.GetUserActiveRoom(user)
 	user.ClearCriticalInfo()
 
-
 	w.WriteHeader(http.StatusOK)
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "    ")

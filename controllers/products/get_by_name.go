@@ -45,7 +45,7 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 		}
 
     if room.GuestPermission(user) < 2 {
-			http.Error(w, models.ErrInvalidPermission, http.StatusForbidden)
+			http.Error(w, models.ErrInsufficientPermission, http.StatusForbidden)
 			return
     }
 	}

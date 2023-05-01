@@ -8,15 +8,15 @@ import (
 )
 
 const (
-  // No such tab in this room
-	ErrNoSuchTab        string = "No such tab in this room"
-  // Invalid number for request
+	// No such tab in this room
+	ErrNoSuchTab string = "No such tab in this room"
+	// Invalid number for request
 	ErrInvalidTabNumber string = "Invalid number for request"
 )
 
 type Tab struct {
-	Number   int     `json:"number"`
 	RoomId   int     `json:"room"`
+	Number   int     `json:"number"`
 	PayValue float64 `json:"pay_value"`
 	Maded    string  `json:"time_maded"`
 	Table    int     `json:"table"`
@@ -25,13 +25,37 @@ type Tab struct {
 }
 
 type UpdatingTab struct {
-	Number   int     `json:"number"`
 	RoomId   int     `json:"room"`
+	Number   int     `json:"number"`
 	PayValue float64 `json:"pay_value"`
 	Maded    string  `json:"time_maded"`
 	Table    int     `json:"table"`
 
 	Requests []UpdatingRequest `json:"requests"`
+}
+
+func (ut UpdatingTab) ToNormalTab() Tab {
+	var requests []Request
+
+	for _, updatingRequest := range ut.Requests {
+		request := Request{
+			TabRoom:     updatingRequest.TabRoom,
+			TabNumber:   updatingRequest.TabNumber,
+			ProductName: updatingRequest.ProductName,
+			Quantity:    updatingRequest.Quantity,
+		}
+
+		requests = append(requests, request)
+	}
+
+	return Tab{
+		RoomId:   ut.RoomId,
+		Number:   ut.Number,
+		PayValue: ut.PayValue,
+		Maded:    ut.Maded,
+		Table:    ut.Table,
+		Requests: requests,
+	}
 }
 
 func SelectTabByNumber(number, roomId int) (Tab, error) {
@@ -42,7 +66,7 @@ func SelectTabByNumber(number, roomId int) (Tab, error) {
 	if err != nil {
 		panic(err)
 	}
-  defer rows.Close()
+	defer rows.Close()
 
 	if rows.Next() {
 		err := rows.Scan(&tab.Number, &tab.RoomId, &tab.PayValue, &tab.Maded, &tab.Table)
@@ -69,14 +93,15 @@ func InsertTab(tab *Tab) error {
 		tab.CalculateValue()
 	}
 
-  if _, err := time.Parse("15:04:05", tab.Maded); err != nil {
-	  tab.Maded = time.Now().Local().Format("15:04:05")
-  }
+	if _, err := time.Parse("15:04:05", tab.Maded); err != nil {
+		tab.Maded = time.Now().Local().Format("15:04:05")
+	}
 
-	_, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, tab.Maded, tab.Table)
+	rows, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, tab.Maded, tab.Table)
 	if err != nil {
 		return err
 	}
+	rows.Close()
 
 	return nil
 }
@@ -84,10 +109,11 @@ func InsertTab(tab *Tab) error {
 func DeleteTab(tab Tab) error {
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
+	rows, err := db.Query(database.DeleteTab, tab.Number, tab.RoomId)
 	if err != nil {
 		panic(err)
 	}
+	rows.Close()
 
 	return nil
 }
@@ -95,10 +121,11 @@ func DeleteTab(tab Tab) error {
 func UpdateTab(oldTab, newTab Tab) error {
 	var db = database.GetConnection()
 
-	_, err := db.Query(database.UpdateTab, newTab.Table, oldTab.Number, oldTab.RoomId)
+	rows, err := db.Query(database.UpdateTab, newTab.Table, oldTab.Number, oldTab.RoomId)
 	if err != nil {
 		return err
 	}
+	rows.Close()
 
 	return nil
 }

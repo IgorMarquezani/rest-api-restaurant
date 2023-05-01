@@ -77,10 +77,11 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 		return fmt.Errorf("Room id value cannot be empty")
 	}
 
-	_, err := db.Query(database.UpdateSessionAcRoom, room.Id, seesion.Who)
+	update, err := db.Query(database.UpdateSessionAcRoom, room.Id, seesion.Who)
 	if err != nil {
 		return err
 	}
+  update.Close()
 
 	seesion.ActiveRoom = room.Id
 
@@ -95,6 +96,7 @@ func GetUserActiveRoom(user User) (int, error) {
   if err != nil {
     panic(err)
   }
+  defer row.Close()
 
   if row.Next() {
     err := row.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)

@@ -19,10 +19,11 @@ type Invite struct {
 func InsertInvite(user User, roomId int, permission uint) {
 	db := database.GetConnection()
 
-	_, err := db.Query(database.InsertInvite, user.Id, roomId, permission)
+	insert, err := db.Query(database.InsertInvite, user.Id, roomId, permission)
 	if err != nil {
 		panic(err)
 	}
+  insert.Close()
 }
 
 func SelectInviteByUser(u User) []Invite {

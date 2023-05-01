@@ -48,7 +48,8 @@ func InsertUser(u User) error {
 
 	db := database.GetConnection()
 
-	_, err := db.Query(database.InsertUser, u.Name, u.Email, u.Passwd, u.Img)
+	insert, err := db.Query(database.InsertUser, u.Name, u.Email, u.Passwd, u.Img)
+  insert.Close()
 
 	return err
 }
@@ -70,10 +71,12 @@ func (u *User) UserInvites() []Invite {
 
 	for rows.Next() {
 		invite := Invite{}
+
 		err := rows.Scan(&invite.Id, &invite.Target, &invite.InvitingRoom, &invite.Status, &invite.Permission)
 		if err != nil {
 			panic(err)
 		}
+
 		u.Invites = append(u.Invites, invite)
 	}
 
@@ -90,9 +93,12 @@ func (u *User) AcceptedRooms() []Room {
 	defer rows.Close()
 
 	u.RoomsAsGuest = make([]Room, 0)
+
 	for rows.Next() {
 		room := Room{}
+
 		rows.Scan(&room.Id, &room.Owner)
+
 		u.RoomsAsGuest = append(u.RoomsAsGuest, room)
 	}
 

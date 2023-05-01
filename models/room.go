@@ -4,13 +4,13 @@ import (
 	"github.com/api/database"
 )
 
-const (
-  ErrInsufficientPermission = "Does not have permission for this operation"
-)
+type RoomsProductsChan map[int]chan Product
+
+var roomsProductsChan = make(RoomsProductsChan)
 
 type ProductsInRoom map[int]Products
 
-var RoomProducts ProductsInRoom
+var RoomProducts = make(ProductsInRoom)
 
 type Room struct {
 	Id    int `json:"id"`
@@ -21,13 +21,47 @@ type Room struct {
 	Tabs         []Tab
 }
 
+const (
+	ErrInsufficientPermission = "Does not have permission for this operation"
+)
+
+func CacheProduct(roomId int, product Product) {
+
+}
+
+func AddProductToRoomCache(roomId int) {
+	var c chan Product
+	var ok bool
+
+	if c, ok = roomsProductsChan[roomId]; !ok {
+		roomsProductsChan[roomId] = make(chan Product, 10)
+		c = roomsProductsChan[roomId]
+	}
+
+	go func() {
+		if _, ok := RoomProducts[roomId]; !ok {
+			RoomProducts[roomId] = make(Products)
+		}
+
+		for {
+			select {
+			case product := <-c:
+				RoomProducts[roomId][product.Name] = product
+			}
+		}
+	}()
+}
+
+// Working everything down here
+
 func MustInsertRoom(userId uint) {
 	db := database.GetConnection()
 
-	_, err := db.Query(database.InsertRoom, userId)
+	insert, err := db.Query(database.InsertRoom, userId)
 	if err != nil {
 		panic(err)
 	}
+  insert.Close()
 }
 
 /*
@@ -72,15 +106,17 @@ func (r *Room) FindProductsLists() ProductListMap {
 
 	r.ProductsList = make(ProductListMap)
 
-	search, err := db.Query(database.SelectProductListByRoom, r.Id)
+	rows, err := db.Query(database.SelectProductListByRoom, r.Id)
 	if err != nil {
 		panic(err)
 	}
-	defer search.Close()
+	defer rows.Close()
 
-	for search.Next() {
+	for rows.Next() {
 		list := ProductList{}
-		search.Scan(&list.Name, &list.Room)
+
+		rows.Scan(&list.Name, &list.Room)
+
 		r.ProductsList[list.Name] = list
 	}
 
@@ -89,17 +125,18 @@ func (r *Room) FindProductsLists() ProductListMap {
 
 func (r *Room) FindTabs() []Tab {
 	var db = database.GetConnection()
+
 	r.Tabs = make([]Tab, 0)
 
-	search, err := db.Query(database.SelectTabsInRoom, r.Id)
+	rows, err := db.Query(database.SelectTabsInRoom, r.Id)
 	if err != nil {
 		panic(err)
 	}
-	defer search.Close()
+	defer rows.Close()
 
-	for i := 0; search.Next(); i++ {
+	for i := 0; rows.Next(); i++ {
 		r.Tabs = append(r.Tabs, Tab{})
-		search.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded, &r.Tabs[i].Table)
+		rows.Scan(&r.Tabs[i].Number, &r.Tabs[i].RoomId, &r.Tabs[i].PayValue, &r.Tabs[i].Maded, &r.Tabs[i].Table)
 		r.Tabs[i].RemoveMadedTrash()
 	}
 
@@ -160,14 +197,14 @@ func RoomByItsOwner(owner int) Room {
 	var room Room
 	var db = database.GetConnection()
 
-	result, err := db.Query(database.SelectRoomByOwner, owner)
+	rows, err := db.Query(database.SelectRoomByOwner, owner)
 	if err != nil {
 		panic(err)
 	}
-	defer result.Close()
+	defer rows.Close()
 
-	if result.Next() {
-		result.Scan(&room.Id, &room.Owner)
+	if rows.Next() {
+		rows.Scan(&room.Id, &room.Owner)
 	}
 
 	return room
@@ -176,16 +213,17 @@ func RoomByItsOwner(owner int) Room {
 func RoomByItsId(id int) Room {
 	var room Room
 	var db = database.GetConnection()
+
 	room.Guests = make(GuestMap)
 
-	search, err := db.Query(database.SelectRoomById, id)
+	rows, err := db.Query(database.SelectRoomById, id)
 	if err != nil {
 		panic(err)
 	}
-	defer search.Close()
+	defer rows.Close()
 
-	if search.Next() {
-		search.Scan(&room.Id, &room.Owner)
+	if rows.Next() {
+		rows.Scan(&room.Id, &room.Owner)
 	}
 
 	return room

@@ -1,4 +1,4 @@
-package product_list
+package products_lists
 
 import (
 	"encoding/json"
@@ -47,7 +47,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	if err := models.InsertProductList(pl); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {
-			http.Error(w, "name already in use", http.StatusAlreadyReported)
+			http.Error(w, "Name already in use", http.StatusAlreadyReported)
 			return
 		}
 

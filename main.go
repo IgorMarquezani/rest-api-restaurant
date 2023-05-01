@@ -29,9 +29,7 @@ func init() {
 	defer searchR.Close()
 
 	for searchR.Next() {
-		var (
-			room models.Room
-		)
+		var room models.Room
 
 		searchR.Scan(&room.Id, &room.Owner)
 
@@ -47,19 +45,15 @@ func init() {
 			var (
 				product models.Product
 				desc    []byte
-				img     []byte
 			)
-			err := searchP.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &desc, &img)
+
+			err := searchP.Scan(&product.ListName, &product.ListRoom, &product.Name, &product.Price, &desc, &product.Image)
 			if err != nil {
 				panic(err)
 			}
 
 			if desc != nil {
-				product.Description = desc
-			}
-
-			if img != nil {
-				product.Image = img
+				product.Description = string(desc)
 			}
 
 			models.RoomProducts[room.Id][product.Name] = product

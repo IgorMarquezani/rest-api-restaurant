@@ -10,19 +10,19 @@ const (
 	ErrPlEmptyName string = "product list with no name"
 )
 
-func OrphanList(roomId uint) ProductList {
-	return ProductList{
-		Name: "orphans",
-		Room: int(roomId),
-	}
-}
-
 type ProductListMap map[string]ProductList
 
 type ProductList struct {
 	Name     string   `json:"name"`
 	Room     int      `json:"room"`
 	Products Products `json:"products"`
+}
+
+func OrphanList(roomId uint) ProductList {
+	return ProductList{
+		Name: "orphans",
+		Room: int(roomId),
+	}
 }
 
 func InsertProductList(pl ProductList) error {
@@ -32,7 +32,10 @@ func InsertProductList(pl ProductList) error {
 
 	db := database.GetConnection()
 
-	_, err := db.Query(database.InsertProductList, pl.Name, pl.Room)
+	insert, err := db.Query(database.InsertProductList, pl.Name, pl.Room)
+  if err == nil {
+    insert.Close()
+  }
 
 	return err
 }
