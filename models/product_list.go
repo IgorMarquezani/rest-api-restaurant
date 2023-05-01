@@ -33,9 +33,9 @@ func InsertProductList(pl ProductList) error {
 	db := database.GetConnection()
 
 	insert, err := db.Query(database.InsertProductList, pl.Name, pl.Room)
-  if err == nil {
-    insert.Close()
-  }
+	if err == nil {
+		insert.Close()
+	}
 
 	return err
 }

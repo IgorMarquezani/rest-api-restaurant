@@ -61,7 +61,7 @@ func MustInsertRoom(userId uint) {
 	if err != nil {
 		panic(err)
 	}
-  insert.Close()
+	insert.Close()
 }
 
 /*

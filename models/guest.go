@@ -3,7 +3,7 @@ package models
 import "github.com/api/database"
 
 const (
-  ErrNotAGuest = "Not a guest in this room"
+	ErrNotAGuest = "Not a guest in this room"
 )
 
 type GuestMap map[string]User
@@ -21,7 +21,7 @@ func InsertGuest(roomId, userId, permission uint) error {
 	if err != nil {
 		return err
 	}
-  insert.Close()
+	insert.Close()
 
 	return nil
 }

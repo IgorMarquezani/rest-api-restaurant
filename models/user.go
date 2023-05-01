@@ -49,7 +49,7 @@ func InsertUser(u User) error {
 	db := database.GetConnection()
 
 	insert, err := db.Query(database.InsertUser, u.Name, u.Email, u.Passwd, u.Img)
-  insert.Close()
+	insert.Close()
 
 	return err
 }

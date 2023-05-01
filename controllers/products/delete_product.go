@@ -60,8 +60,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-    http.Error(w, "Internal server error", http.StatusInternalServerError)
-    return
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

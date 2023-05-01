@@ -7,14 +7,14 @@ import (
 	"github.com/api/models"
 )
 
-func WithActiveRoom(w http.ResponseWriter, r *http.Request)  {
+func WithActiveRoom(w http.ResponseWriter, r *http.Request) {
 	err, user, session := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, "Not logged in", http.StatusFailedDependency)
 		return
 	}
 
-  user.Room = models.RoomByItsId(session.ActiveRoom)
+	user.Room = models.RoomByItsId(session.ActiveRoom)
 
 	user.Room.FindGuests()
 	user.Room.FindProductsLists()
@@ -29,5 +29,5 @@ func WithActiveRoom(w http.ResponseWriter, r *http.Request)  {
 	user.UserInvites()
 
 	w.WriteHeader(http.StatusOK)
-  controllers.EncodeJSON(w, user)
+	controllers.EncodeJSON(w, user)
 }

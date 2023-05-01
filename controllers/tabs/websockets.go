@@ -97,9 +97,9 @@ func (room *roomClients) HandleClientConnection(w http.ResponseWriter, r *http.R
 
 	conn, err := websocket.Accept(w, r, options)
 	if err != nil {
-    log.Println("Error during websocket creation:", err)
-    http.Error(w, "Internal server error", http.StatusInternalServerError)
-    return
+		log.Println("Error during websocket creation:", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 	defer conn.Close(websocket.StatusGoingAway, "Closing connection")
 

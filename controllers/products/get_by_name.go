@@ -44,10 +44,10 @@ func GetProduct(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-    if room.GuestPermission(user) < 2 {
+		if room.GuestPermission(user) < 2 {
 			http.Error(w, models.ErrInsufficientPermission, http.StatusForbidden)
 			return
-    }
+		}
 	}
 
 	product, err := models.SelectOneProduct(room.Id, name)

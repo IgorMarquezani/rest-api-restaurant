@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/api/controllers/invites"
-	"github.com/api/controllers/products_lists"
 	"github.com/api/controllers/products"
+	"github.com/api/controllers/products_lists"
 	"github.com/api/controllers/rooms"
 	"github.com/api/controllers/sessions"
 	"github.com/api/controllers/tabs"
@@ -23,9 +23,9 @@ func UserRoutes(r *mux.Router) {
 	r.Handle("/api/user/auth", sessions.HandleAuthentication{}).Methods(http.MethodPost)
 
 	r.HandleFunc("/api/user/full-info", users.FullInfo).Methods(http.MethodGet, http.MethodPost)
-  r.HandleFunc("/api/user/with-active-room-products", users.WithActiveRoom).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/with-active-room-products", users.WithActiveRoom).Methods(http.MethodGet)
 
-  r.HandleFunc("/api/user/invites", users.Invites).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/invites", users.Invites).Methods(http.MethodGet)
 }
 
 func SessionsRoutes(r *mux.Router) {
@@ -49,13 +49,13 @@ func ProductsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/product/select/{name}/{room}", products.GetProduct).Methods(http.MethodGet)
 	r.HandleFunc("/api/product/select/{name}", products.GetProduct).Methods(http.MethodGet)
 
-  r.HandleFunc("/api/product/delete/{name}", products.Delete).Methods(http.MethodDelete)
+	r.HandleFunc("/api/product/delete/{name}", products.Delete).Methods(http.MethodDelete)
 }
 
 func TabsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tab/register", tabs.Register).Methods(http.MethodPost)
 
-  r.HandleFunc("/api/tab/update", tabs.Update).Methods(http.MethodPut)
+	r.HandleFunc("/api/tab/update", tabs.Update).Methods(http.MethodPut)
 
 	r.HandleFunc("/api/tab/delete/{number}/{room}", tabs.Delete).Methods(http.MethodDelete)
 	r.HandleFunc("/api/tab/delete/{number}", tabs.Delete).Methods(http.MethodDelete)
@@ -81,6 +81,6 @@ func HandleRequest() {
 	UserRoutes(r)
 	TabsRoutes(r)
 
-  fmt.Println("Listening on localhost:3300")
+	fmt.Println("Listening on localhost:3300")
 	log.Fatal(http.ListenAndServe(":3300", r))
 }

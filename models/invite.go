@@ -23,7 +23,7 @@ func InsertInvite(user User, roomId int, permission uint) {
 	if err != nil {
 		panic(err)
 	}
-  insert.Close()
+	insert.Close()
 }
 
 func SelectInviteByUser(u User) []Invite {

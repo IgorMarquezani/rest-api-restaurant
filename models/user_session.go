@@ -81,7 +81,7 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 	if err != nil {
 		return err
 	}
-  update.Close()
+	update.Close()
 
 	seesion.ActiveRoom = room.Id
 
@@ -89,25 +89,25 @@ func UpdateActiveRoom(seesion *UserSession, room Room) error {
 }
 
 func GetUserActiveRoom(user User) (int, error) {
-  var session UserSession
-  var db = database.GetConnection()
+	var session UserSession
+	var db = database.GetConnection()
 
-  row, err := db.Query(database.SelectSessionByUId, user.Id)
-  if err != nil {
-    panic(err)
-  }
-  defer row.Close()
+	row, err := db.Query(database.SelectSessionByUId, user.Id)
+	if err != nil {
+		panic(err)
+	}
+	defer row.Close()
 
-  if row.Next() {
-    err := row.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
-    if err != nil {
-      panic(err)
-    }
+	if row.Next() {
+		err := row.Scan(&session.Who, &session.ActiveRoom, &session.SecurePS)
+		if err != nil {
+			panic(err)
+		}
 
-    return session.ActiveRoom, err
-  }
+		return session.ActiveRoom, err
+	}
 
-  return 0, errors.New(ErrNoSession)
+	return 0, errors.New(ErrNoSession)
 }
 
 func SessionBySecurePS(hash []byte) (UserSession, bool) {

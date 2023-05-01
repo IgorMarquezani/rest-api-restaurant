@@ -42,7 +42,7 @@ func FullInfo(w http.ResponseWriter, r *http.Request) {
 		user.RoomsAsGuest[i].FindTabsRequests()
 	}
 
-  user.ActiveRoom, _ = models.GetUserActiveRoom(user)
+	user.ActiveRoom, _ = models.GetUserActiveRoom(user)
 	user.ClearCriticalInfo()
 
 	w.WriteHeader(http.StatusOK)

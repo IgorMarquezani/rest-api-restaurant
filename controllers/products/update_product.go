@@ -30,10 +30,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.Unmarshal(body, &newProduct)
-  if newProduct.Name == "" {
-    http.Error(w, models.ErrEmptyProductName, http.StatusExpectationFailed)
-    return
-  }
+	if newProduct.Name == "" {
+		http.Error(w, models.ErrEmptyProductName, http.StatusExpectationFailed)
+		return
+	}
 
 	if newProduct.ListRoom <= 0 {
 		room = models.RoomByItsId(session.ActiveRoom)
@@ -76,12 +76,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusConflict)
 			controllers.EncodeJSON(w, deleteErr)
 			return
-    }
+		}
 
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-  controllers.EncodeJSON(w, newProduct)
+	controllers.EncodeJSON(w, newProduct)
 }

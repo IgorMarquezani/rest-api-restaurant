@@ -39,7 +39,7 @@ func InsertRequest(tab Tab, request Request) error {
 	if err != nil {
 		return err
 	}
-  insert.Close()
+	insert.Close()
 
 	return nil
 }
@@ -71,7 +71,7 @@ func UpdateRequestQuantity(request Request, quantity uint) error {
 	if err != nil {
 		panic(err)
 	}
-  update.Close()
+	update.Close()
 
 	return nil
 }
@@ -83,7 +83,7 @@ func DeleteRequest(number, roomId int, productName string) {
 	if err != nil {
 		panic(err)
 	}
-  del.Close()
+	del.Close()
 }
 
 func DeleteRequestsInTab(tab Tab) error {
@@ -93,7 +93,7 @@ func DeleteRequestsInTab(tab Tab) error {
 	if err != nil {
 		panic(err)
 	}
-  del.Close()
+	del.Close()
 
 	return nil
 }
