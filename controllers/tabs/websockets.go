@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/api/controllers"
 	"github.com/api/models"
@@ -20,14 +19,32 @@ type deleteChan chan int
 
 type roomClients struct {
 	id         int
-	mutex      sync.Mutex
 	insertChan map[string]insertChan
 	deleteChan map[string]deleteChan
 }
 
-var newRoomMutex sync.Mutex
-
 var rooms = make(map[int]*roomClients)
+
+var newRoomClients = make(chan int, 100)
+
+func init() {
+	go ListenForNewRooms(newRoomClients)
+}
+
+func ListenForNewRooms(ch <-chan int) {
+	for {
+		select {
+		case id := <-ch:
+			if _, ok := rooms[id]; !ok {
+				rooms[id] = &roomClients{
+					id:         id,
+					insertChan: make(map[string]insertChan),
+					deleteChan: make(map[string]deleteChan),
+				}
+			}
+		}
+	}
+}
 
 func SendTabToRoom(roomId int, tab models.Tab) {
 	if clients, ok := rooms[roomId]; ok {
@@ -45,27 +62,18 @@ func DeleteTabInRoom(roomId, tabNumber int) {
 	}
 }
 
-func NewRoomClients(roomId int) *roomClients {
-	newRoomMutex.Lock()
-	if _, ok := rooms[roomId]; !ok {
-		rooms[roomId] = &roomClients{
-			insertChan: make(map[string]insertChan),
-			deleteChan: make(map[string]deleteChan),
-		}
-	}
-	newRoomMutex.Unlock()
+func NewRoom(roomId int, ch chan<- int) *roomClients {
+	var (
+		room *roomClients
+		ok   bool
+	)
 
-	return rooms[roomId]
-}
+	ch <- roomId
 
-func (room *roomClients) NewClientChans(email string) {
-	if _, ok := room.insertChan[email]; !ok {
-		room.insertChan[email] = make(insertChan, 10)
+	for room, ok = rooms[roomId]; !ok; {
 	}
 
-	if _, ok := room.deleteChan[email]; !ok {
-		room.deleteChan[email] = make(deleteChan, 10)
-	}
+	return room
 }
 
 func Websocket(w http.ResponseWriter, r *http.Request) {
@@ -81,12 +89,16 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if room, ok = rooms[session.ActiveRoom]; !ok {
-		room = NewRoomClients(session.ActiveRoom)
+		room = NewRoom(session.ActiveRoom, newRoomClients)
 	}
 
-	if _, ok = room.insertChan[user.Email]; !ok {
-		room.NewClientChans(user.Email)
-	}
+  if _, ok = room.insertChan[user.Email]; !ok {
+    room.insertChan[user.Email] = make(insertChan, 10)  
+  }
+
+  if _, ok = room.deleteChan[user.Email]; !ok {
+    room.deleteChan[user.Email] = make(deleteChan, 10)  
+  }
 
 	room.HandleClientConnection(w, r, user.Email)
 }
