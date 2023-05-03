@@ -70,7 +70,10 @@ func NewRoom(roomId int, ch chan<- int) *roomClients {
 
 	ch <- roomId
 
+  // checking loop
+  // looping into rooms until it finds the room that the user needs
 	for room, ok = rooms[roomId]; !ok; {
+		room, ok = rooms[roomId]
 	}
 
 	return room
@@ -92,13 +95,13 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 		room = NewRoom(session.ActiveRoom, newRoomClients)
 	}
 
-  if _, ok = room.insertChan[user.Email]; !ok {
-    room.insertChan[user.Email] = make(insertChan, 10)  
-  }
+	if _, ok = room.insertChan[user.Email]; !ok {
+		room.insertChan[user.Email] = make(insertChan, 10)
+	}
 
-  if _, ok = room.deleteChan[user.Email]; !ok {
-    room.deleteChan[user.Email] = make(deleteChan, 10)  
-  }
+	if _, ok = room.deleteChan[user.Email]; !ok {
+		room.deleteChan[user.Email] = make(deleteChan, 10)
+	}
 
 	room.HandleClientConnection(w, r, user.Email)
 }
