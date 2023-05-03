@@ -14,7 +14,6 @@ func Invites(w http.ResponseWriter, r *http.Request) {
 	}
 
 	invites := user.UserInvites()
-	user.ClearCriticalInfo()
 
 	w.WriteHeader(http.StatusOK)
 	controllers.EncodeJSON(w, invites)
