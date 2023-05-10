@@ -100,7 +100,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	SendTabToRoom(room.Id, newTab.ToNormalTab())
+	SendTab(room.Id, newTab.ToNormalTab())
 
 	w.WriteHeader(http.StatusOK)
 }

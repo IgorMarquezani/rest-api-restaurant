@@ -84,7 +84,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SendTabToRoom(room.Id, tab)
+	SendTab(room.Id, tab)
 
 	w.WriteHeader(http.StatusCreated)
 	controllers.EncodeJSON(w, tab)

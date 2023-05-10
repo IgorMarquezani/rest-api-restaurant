@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/api/controllers"
 	"github.com/api/models"
+	"github.com/gorilla/mux"
 	"nhooyr.io/websocket"
 )
 
@@ -17,96 +20,155 @@ type insertChan chan models.Tab
 
 type deleteChan chan int
 
-type roomClients struct {
-	id         int
-	insertChan map[string]insertChan
-	deleteChan map[string]deleteChan
+type client struct {
+  // client email
+	email   string
+  // chan for new and updated tabs
+	inserts insertChan
+  // chan for deleted tabs
+	deletes deleteChan
 }
 
-var rooms = make(map[int]*roomClients)
-
-var newRoomClients = make(chan int, 100)
-
-func init() {
-	go ListenForNewRooms(newRoomClients)
+type room struct {
+	// room id
+	id int
+  // a map of clients using strings as key. Example: clients["someone@gmail.com"]
+	clients sync.Map
 }
 
-func ListenForNewRooms(ch <-chan int) {
-	for {
-		select {
-		case id := <-ch:
-			if _, ok := rooms[id]; !ok {
-				rooms[id] = &roomClients{
-					id:         id,
-					insertChan: make(map[string]insertChan),
-					deleteChan: make(map[string]deleteChan),
-				}
-			}
-		}
-	}
-}
+var rooms sync.Map
 
-func SendTabToRoom(roomId int, tab models.Tab) {
-	if clients, ok := rooms[roomId]; ok {
-		for _, ch := range clients.insertChan {
-			ch <- tab
-		}
-	}
-}
-
-func DeleteTabInRoom(roomId, tabNumber int) {
-	if clients, ok := rooms[roomId]; ok {
-		for _, ch := range clients.deleteChan {
-			ch <- tabNumber
-		}
-	}
-}
-
-func NewRoom(roomId int, ch chan<- int) *roomClients {
+func SendTab(roomId int, tab models.Tab) {
 	var (
-		room *roomClients
-		ok   bool
+		v  any
+		r  *room
+		ok bool
 	)
 
-	ch <- roomId
-
-  // checking loop
-  // looping into rooms until it finds the room that the user needs
-	for room, ok = rooms[roomId]; !ok; {
-		room, ok = rooms[roomId]
+	if v, ok = rooms.Load(roomId); !ok {
+		fmt.Println("No such room of id", roomId)
+		return
 	}
 
-	return room
+	if r, ok = v.(*room); !ok {
+		fmt.Println("Cannot cast to room pointer", roomId)
+		return
+	}
+
+	r.clients.Range(func(key, value any) bool {
+		var (
+			ct *client
+			ok bool
+		)
+
+		if ct, ok = value.(*client); !ok {
+			return false
+		}
+
+		ct.inserts <- tab
+		return true
+	})
 }
 
-func Websocket(w http.ResponseWriter, r *http.Request) {
+func DeleteTab(roomId, tabNumber int) {
 	var (
-		room *roomClients
-		ok   bool
+		v  any
+		r  *room
+		ok bool
 	)
 
-	err, user, session := controllers.VerifySession(r)
+	if v, ok = rooms.Load(roomId); !ok {
+		fmt.Println("No such room of id", roomId)
+		return
+	}
+
+	if r, ok = v.(*room); !ok {
+		fmt.Println("Cannot cast to room pointer", roomId)
+		return
+	}
+
+	r.clients.Range(func(key, value any) bool {
+		var (
+			ct *client
+			ok bool
+		)
+
+		if ct, ok = value.(*client); !ok {
+			return false
+		}
+
+		ct.deletes <- tabNumber
+		return true
+	})
+}
+
+func NewRoom(id int) any {
+	v, _ := rooms.LoadOrStore(id, &room{
+		id:      id,
+		clients: sync.Map{},
+	})
+	fmt.Println("created room of number:", id)
+
+	return v
+}
+
+func Websocket(w http.ResponseWriter, rq *http.Request) {
+	var (
+		v  any
+		ok bool
+		r  *room
+		cl *client
+	)
+
+	err, user, _ := controllers.VerifySession(rq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	if room, ok = rooms[session.ActiveRoom]; !ok {
-		room = NewRoom(session.ActiveRoom, newRoomClients)
+	idStr, _ := mux.Vars(rq)["room-id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid number of room", http.StatusBadRequest)
+		return
 	}
 
-	if _, ok = room.insertChan[user.Email]; !ok {
-		room.insertChan[user.Email] = make(insertChan, 10)
+	if room := models.RoomByItsId(id); room.IsOwner(user) {
+		goto skip
 	}
 
-	if _, ok = room.deleteChan[user.Email]; !ok {
-		room.deleteChan[user.Email] = make(deleteChan, 10)
+	if room := models.RoomByItsId(id); !room.IsGuest(user) {
+		http.Error(w, models.ErrNotAGuest, http.StatusUnauthorized)
+		return
 	}
 
-	room.HandleClientConnection(w, r, user.Email)
+skip:
+
+	if v, ok = rooms.Load(id); !ok {
+		v = NewRoom(id)
+	}
+
+	if r, ok = v.(*room); !ok {
+		panic("Error getting room")
+	}
+
+	if v, ok = r.clients.Load(user.Email); !ok {
+		r.clients.LoadOrStore(user.Email, &client{
+			email:   user.Email,
+			inserts: make(insertChan, 100),
+			deletes: make(deleteChan, 100),
+		})
+	}
+
+	v, _ = r.clients.Load(user.Email)
+	if cl, ok = v.(*client); !ok {
+		panic("Error getting the client")
+	}
+
+	r.HandleClientConnection(w, rq, cl)
 }
 
-func (room *roomClients) HandleClientConnection(w http.ResponseWriter, r *http.Request, userEmail string) {
+func (room *room) HandleClientConnection(w http.ResponseWriter, r *http.Request, cl *client) {
 	option := strings.Split(r.Header.Get("Origin"), "/")[2]
 	options := &websocket.AcceptOptions{OriginPatterns: []string{option}}
 
@@ -116,22 +178,23 @@ func (room *roomClients) HandleClientConnection(w http.ResponseWriter, r *http.R
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+	log.Println("New websocket connection")
 	defer conn.Close(websocket.StatusGoingAway, "Closing connection")
 
 	ctx, cancel := context.WithCancel(r.Context())
-	ctx = conn.CloseRead(ctx)
 	defer cancel()
 
-	insertCh := room.insertChan[userEmail]
-	deleteCh := room.deleteChan[userEmail]
+	ctx = conn.CloseRead(ctx)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("Closing websocket")
+			conn.Close(websocket.StatusGoingAway, "Closing connection")
 			return
 
-		case tab := <-insertCh:
+		case tab := <-cl.inserts:
+			log.Println("Tab here from room:", room.id)
 			data, jsonErr := json.Marshal(tab)
 			if jsonErr != nil {
 				log.Println("Error:", jsonErr.Error())
@@ -141,98 +204,17 @@ func (room *roomClients) HandleClientConnection(w http.ResponseWriter, r *http.R
 
 			if err := conn.Write(ctx, websocket.MessageText, data); err != nil {
 				log.Println("Error:", err.Error())
+				conn.Close(websocket.StatusGoingAway, "Closing connection")
 				return
 			}
 
-		case number := <-deleteCh:
+		case number := <-cl.deletes:
+			log.Println("Delete tav here from room:", room.id)
 			if err := conn.Write(ctx, websocket.MessageText, []byte(fmt.Sprintf("Delete tab of number: %d", number))); err != nil {
 				log.Println("Error:", err.Error())
+				conn.Close(websocket.StatusGoingAway, "Closing connection")
 				return
 			}
 		}
 	}
 }
-
-// Old implementation that only supports one user per room
-
-// type RoomsClientsWebsockets map[int]roomClients
-
-// type roomsTabsChan map[int]tabChan
-
-// var websocketsChan roomsTabsChan = make(roomsTabsChan)
-
-// func newTabsChan(roomId int) tabChan {
-// 	var (
-// 		ch tabChan
-// 		ok bool
-// 	)
-
-// 	mutex.Lock()
-// 	if ch, ok = websocketsChan[roomId]; !ok {
-// 		websocketsChan[roomId] = make(tabChan, 20)
-// 		ch = websocketsChan[roomId]
-// 	}
-
-// 	mutex.Unlock()
-// 	return ch
-// }
-
-// func sendTabInChan(roomId int, tab models.Tab) {
-// 	if ch, ok := websocketsChan[roomId]; ok {
-// 		ch <- tab
-// 	}
-// }
-
-// func WebsocketOld(w http.ResponseWriter, r *http.Request) {
-// 	var (
-// 		ch tabChan
-// 		ok bool
-// 	)
-
-// 	err, _, session := controllers.VerifySession(r)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusUnauthorized)
-// 		return
-// 	}
-
-// 	option := strings.Split(r.Header.Get("Origin"), "/")[2]
-// 	options := &websocket.AcceptOptions{OriginPatterns: []string{option}}
-
-// 	conn, err := websocket.Accept(w, r, options)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer conn.Close(websocket.StatusGoingAway, "Closing connection")
-
-// 	ctx, cancel := context.WithCancel(r.Context())
-// 	defer cancel()
-
-// 	ctx = conn.CloseRead(ctx)
-
-// 	room := models.RoomByItsId(session.ActiveRoom)
-
-// 	if ch, ok = websocketsChan[room.Id]; !ok {
-// 		ch = newTabsChan(room.Id)
-// 	}
-
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			log.Println("Closing websocket")
-// 			return
-
-// 		case tab := <-ch:
-// 			data, jsonErr := json.Marshal(tab)
-// 			if jsonErr != nil {
-// 				log.Println("Error: ", jsonErr.Error())
-// 				conn.Write(ctx, websocket.MessageType(websocket.StatusInternalError), []byte(jsonErr.Error()))
-// 				continue
-// 			}
-
-// 			if err := conn.Write(ctx, websocket.MessageText, data); err != nil {
-// 				log.Println("Error: ", err.Error())
-// 				return
-// 			}
-// 		}
-// 	}
-// }

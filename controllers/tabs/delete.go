@@ -48,7 +48,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DeleteTabInRoom(room.Id, number)
+	DeleteTab(room.Id, number)
 
 	w.WriteHeader(http.StatusOK)
 }

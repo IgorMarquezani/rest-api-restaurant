@@ -60,7 +60,7 @@ func TabsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tab/delete/{number}/{room}", tabs.Delete).Methods(http.MethodDelete)
 	r.HandleFunc("/api/tab/delete/{number}", tabs.Delete).Methods(http.MethodDelete)
 
-	r.HandleFunc("/api/tab/websocket", tabs.Websocket).Methods(http.MethodGet)
+	r.HandleFunc("/api/tab/websocket/{room-id}", tabs.Websocket).Methods(http.MethodGet)
 }
 
 func InvitesRoutes(r *mux.Router) {
@@ -81,6 +81,10 @@ func HandleRequest() {
 	UserRoutes(r)
 	TabsRoutes(r)
 
+  server := http.Server{}
+  server.Addr = "localhost:3300"
+  server.Handler = r
+
 	fmt.Println("Listening on localhost:3300")
-	log.Fatal(http.ListenAndServe(":3300", r))
+	log.Fatal(server.ListenAndServe())
 }
