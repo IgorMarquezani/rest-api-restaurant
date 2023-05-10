@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/api/database"
@@ -27,15 +28,11 @@ type Product struct {
 	Name        string  `json:"name"`
 	Price       float64 `json:"price"`
 	Description string  `json:"description"`
-	Image       []byte  `json:"image"`
+	Image       []byte  `json:"image,omitempty"`
 }
 
 func InsertProduct(product Product) error {
 	db := database.GetConnection()
-
-	if product.ListName == "" {
-		product.ListName = "orphans"
-	}
 
 	insert, err := db.Query(database.InsertProduct,
 		product.ListName, product.ListRoom, product.Name,
@@ -51,11 +48,21 @@ func InsertProduct(product Product) error {
 }
 
 func UpdateProduct(New, Old Product, roomId int) error {
-	db := database.GetConnection()
+	var (
+		update *sql.Rows
+		err    error
+		db     = database.GetConnection()
+	)
 
-	update, err := db.Query(database.UpdateProduct,
-		New.Name, New.Price, New.Description,
-		New.Image, roomId, Old.Name)
+	if New.ListName == "" {
+		update, err = db.Query(database.UpdateProduct,
+			New.Name, New.Price, New.Description,
+			New.Image, roomId, Old.Name)
+	} else {
+		update, err = db.Query(database.UpdateProductAndList,
+			New.Name, New.Price, New.Description,
+			New.Image, New.ListName, roomId, Old.Name)
+	}
 
 	if err != nil {
 		return err
