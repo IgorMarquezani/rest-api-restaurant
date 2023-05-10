@@ -50,6 +50,8 @@ const (
 	InsertProduct string = "INSERT INTO products (list_name, list_room, name, price, description, image) values ($1, $2, $3, $4, $5, $6);"
 	// update products set name = $1, price = $2, description = $3, image = $4 where list_room = $5 and name = $6;
 	UpdateProduct string = "update products set name = $1, price = $2, description = $3, image = $4 where list_room = $5 and name = $6;"
+  // update products set name = $1, price = $2, description = $3, image = $4, list_name = $5 where list_room = $6 and name = $7;
+	UpdateProductAndList string = "update products set name = $1, price = $2, description = $3, image = $4, list_name = $5 where list_room = $6 and name = $7;"
 	// delete from products where name = $1 and list_room = $2;
 	DeleteProduct string = "delete from products where name = $1 and list_room = $2;"
 	// select * from products where name = $1 and list_room = $2;
