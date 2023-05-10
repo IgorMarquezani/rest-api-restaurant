@@ -4,10 +4,6 @@ import (
 	"github.com/api/database"
 )
 
-type RoomsProductsChan map[int]chan Product
-
-var roomsProductsChan = make(RoomsProductsChan)
-
 type ProductsInRoom map[int]Products
 
 var RoomProducts = make(ProductsInRoom)
@@ -24,6 +20,11 @@ type Room struct {
 const (
 	ErrInsufficientPermission = "Does not have permission for this operation"
 )
+
+// Product cache
+type RoomsProductsChan map[int]chan Product
+
+var roomsProductsChan = make(RoomsProductsChan)
 
 func CacheProduct(roomId int, product Product) {
 
@@ -161,10 +162,20 @@ func (r *Room) IsOwner(user User) bool {
 	return false
 }
 
-/*
-For guarantee that no other guest has been added,
-call the FindeGuests() function before using this specific one
-*/
+func (r *Room) IsGuest(user User) bool {
+	if r.Guests == nil {
+		r.Guests = make(GuestMap)
+	}
+
+	r.FindGuests()
+
+	if r.Guests[user.Email].Id != 0 {
+		return true
+	}
+
+	return false
+}
+
 func (r *Room) GuestPermission(user User) int {
 	if r.Guests == nil {
 		r.Guests = make(GuestMap)
@@ -179,18 +190,18 @@ func (r *Room) GuestPermission(user User) int {
 	return SelectGuestPermission(user.Id, r.Id)
 }
 
-func (r *Room) IsGuest(user User) bool {
-	if r.Guests == nil {
-		r.Guests = make(GuestMap)
-	}
+func (r *Room) IsOwnerOrGuest(user User) (bool, int) {
+  if r.Owner == user.Id {
+    return true, 3
+  }
 
-	r.FindGuests()
+  r.FindGuests()
 
-	if r.Guests[user.Email].Id != 0 {
-		return true
-	}
+  if r.IsGuest(user) {
+    return true, r.GuestPermission(user)
+  } 
 
-	return false
+  return false, 0
 }
 
 func RoomByItsOwner(owner int) Room {
