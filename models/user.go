@@ -34,7 +34,7 @@ type User struct {
 	Id     int    `json:"id"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
-	Passwd string `json:"passwd"`
+	Passwd string `json:"passwd,omitempty"`
 	Img    []byte `json:"img"`
 
 	Room         Room
