@@ -56,9 +56,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	oldProduct, err = models.SelectOneProduct(room.Id, mux.Vars(r)["old-name"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusFound)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if err, _ := models.SelectProductList(newProduct.ListName, room.Id); err != nil && newProduct.ListName != "" {
+		models.InsertProductList(models.ProductList{
+			Room: room.Id,
+			Name: newProduct.ListName,
+		})
+	} 
 
 	if err := models.UpdateProduct(newProduct, oldProduct, room.Id); err != nil {
 		if database.IsDuplicateKeyError(err.Error()) {

@@ -39,16 +39,19 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		room = models.RoomByItsId(product.ListRoom)
 	}
 
-	if !room.IsOwner(user) {
-		if !room.IsGuest(user) {
+  ok, permission := room.IsOwnerOrGuest(user)
+  if !ok {
 			http.Error(w, models.ErrNotAGuest, http.StatusBadRequest)
 			return
-		}
+  }
 
-		if room.GuestPermission(user) < 2 {
-			http.Error(w, models.ErrInvalidPermission, http.StatusUnauthorized)
+  if permission < 2 {
+			http.Error(w, models.ErrInsufficientPermission, http.StatusUnauthorized)
 			return
-		}
+  }
+
+	if product.ListName == "" {
+		product.ListName = "orphans"
 	}
 
 	if err := models.InsertProduct(product); err != nil {
@@ -60,6 +63,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 			models.InsertProductList(list)
 			models.InsertProduct(product)
+
+			w.WriteHeader(http.StatusCreated)
+			controllers.EncodeJSON(w, product)
+      return
 		}
 
 		if database.IsDuplicateKeyError(err.Error()) {
