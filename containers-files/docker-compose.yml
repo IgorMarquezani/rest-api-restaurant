@@ -2,6 +2,7 @@ version: '3'
 services:
   postgres:
     image: "postgres"
+    container_name: "postgres-for-restaurant-api"
     restart: always
     environment:
       - POSTGRES_USER=root
@@ -14,6 +15,7 @@ services:
 
   pgadmin-compose:
     image: dpage/pgadmin4
+    container_name: "pgadmin4-for-restaurant-api"
     environment:
       PGADMIN_DEFAULT_EMAIL: "email@email.com"
       PGADMIN_DEFAULT_PASSWORD: "123456"
