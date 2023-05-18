@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/api/database"
@@ -24,40 +25,6 @@ type Tab struct {
 	Requests []Request `json:"requests"`
 }
 
-type UpdatingTab struct {
-	RoomId   int     `json:"room"`
-	Number   int     `json:"number"`
-	PayValue float64 `json:"pay_value"`
-	Maded    string  `json:"time_maded"`
-	Table    int     `json:"table"`
-
-	Requests []UpdatingRequest `json:"requests"`
-}
-
-func (ut UpdatingTab) ToNormalTab() Tab {
-	var requests []Request
-
-	for _, updatingRequest := range ut.Requests {
-		request := Request{
-			TabRoom:     updatingRequest.TabRoom,
-			TabNumber:   updatingRequest.TabNumber,
-			ProductName: updatingRequest.ProductName,
-			Quantity:    updatingRequest.Quantity,
-		}
-
-		requests = append(requests, request)
-	}
-
-	return Tab{
-		RoomId:   ut.RoomId,
-		Number:   ut.Number,
-		PayValue: ut.PayValue,
-		Maded:    ut.Maded,
-		Table:    ut.Table,
-		Requests: requests,
-	}
-}
-
 func SelectTabByNumber(number, roomId int) (Tab, error) {
 	var db = database.GetConnection()
 	var tab Tab
@@ -74,20 +41,16 @@ func SelectTabByNumber(number, roomId int) (Tab, error) {
 			panic(err)
 		}
 
+		tab.FindRequests()
+
 		return tab, nil
 	}
-
-	tab.FindRequests()
 
 	return tab, errors.New(ErrNoSuchTab)
 }
 
 func InsertTab(tab *Tab) error {
 	var db = database.GetConnection()
-
-	if tab.Number == 0 {
-		tab.Number = NextTabNumberInRoom(tab.RoomId)
-	}
 
 	if tab.PayValue == 0 {
 		tab.CalculateValue()
@@ -97,10 +60,17 @@ func InsertTab(tab *Tab) error {
 		tab.Maded = time.Now().Local().Format("15:04:05")
 	}
 
-	rows, err := db.Query(database.InsertTab, tab.Number, tab.RoomId, tab.PayValue, tab.Maded, tab.Table)
+	rows, err := db.Query(database.InsertTab, tab.RoomId, tab.RoomId, tab.PayValue, tab.Maded, tab.Table)
 	if err != nil {
 		return err
 	}
+
+  if rows.Next() {
+    if err := rows.Scan(&tab.Number); err != nil {
+      return err
+    }
+  }
+
 	rows.Close()
 
 	return nil
@@ -130,6 +100,66 @@ func UpdateTab(oldTab, newTab Tab) error {
 	return nil
 }
 
+func IncreaseTabValue(tabNumber, roomId int, value float64) error {
+	db := database.GetConnection()
+
+	update, err := db.Query(database.IncreaseTabValue, tabNumber, roomId, value, tabNumber, roomId)
+	if err != nil {
+		return err
+	}
+	update.Close()
+
+	return nil
+}
+
+func DecreaseTabValue(tabNumber, roomId int, value float64) error {
+	db := database.GetConnection()
+
+	del, err := db.Query(database.DecreaseTabValue, tabNumber, roomId, value, tabNumber, roomId)
+	if err != nil {
+		return err
+	}
+	del.Close()
+
+	return nil
+}
+
+func (t *Tab) Len() int {
+	return len(t.Requests)
+}
+
+func (t *Tab) Less(i, j int) bool {
+	return t.Requests[i].ProductName < t.Requests[j].ProductName
+}
+
+func (t *Tab) Swap(i, j int) {
+	request := t.Requests[i]
+	t.Requests[i] = t.Requests[j]
+	t.Requests[j] = request
+}
+
+func (t *Tab) GroupRequests() {
+	var (
+		total   uint
+		grouped []Request
+	)
+
+	sort.Sort(t)
+
+	for i := 0; i < t.Len(); i++ {
+		request := t.Requests[i]
+
+		for ; i < t.Len()-1 && t.Requests[i].ProductName == t.Requests[i+1].ProductName; i++ {
+			request.Quantity += t.Requests[i+1].Quantity
+		}
+
+		grouped = append(grouped, request)
+		total++
+	}
+
+	t.Requests = grouped[0:total]
+}
+
 func (t *Tab) CalculateValue() {
 	for i := range t.Requests {
 		product := RoomProducts[t.RoomId][t.Requests[i].ProductName]
@@ -155,59 +185,27 @@ func (t *Tab) FindRequests() {
 	}
 }
 
-func (t *Tab) SortRequest() []Request {
-	if t.Requests == nil {
-		t.FindRequests()
-	}
+// func (t *Tab) SortRequest() []Request {
+// 	if t.Requests == nil {
+// 		t.FindRequests()
+// 	}
 
-	requests := t.Requests
+// 	requests := t.Requests
 
-	for i := range requests {
-		for j := i; j < len(requests); j++ {
-			if requests[j].ProductName > requests[i].ProductName {
-				tmp := requests[j]
-				requests[j] = requests[i]
-				requests[i] = tmp
-			}
-		}
-	}
+// 	for i := range requests {
+// 		for j := i; j < len(requests); j++ {
+// 			if requests[j].ProductName > requests[i].ProductName {
+// 				tmp := requests[j]
+// 				requests[j] = requests[i]
+// 				requests[i] = tmp
+// 			}
+// 		}
+// 	}
 
-	t.Requests = requests
+// 	t.Requests = requests
 
-	return requests
-}
-
-func NextTabNumberInRoom(room int) int {
-	var (
-		selected Tab
-		previous Tab
-		next     Tab
-		db       = database.GetConnection()
-	)
-
-	rows, err := db.Query(database.SelectTabsInRoom, room)
-	if err != nil {
-		panic(err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		rows.Scan(&next.Number, &next.RoomId, &next.PayValue, &next.Maded, &next.Table)
-
-		if next.Number-previous.Number > 1 {
-			selected.Number = previous.Number + 1
-			break
-		}
-
-		previous = next
-	}
-
-	if selected.Number == 0 {
-		return next.Number + 1
-	}
-
-	return selected.Number
-}
+// 	return requests
+// }
 
 func (tab *Tab) RemoveMadedTrash() error {
 	if len(tab.Maded) < 20 {

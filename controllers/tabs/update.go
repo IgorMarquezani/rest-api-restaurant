@@ -45,11 +45,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		room = models.RoomByItsId(newTab.RoomId)
 	}
 
-	if !room.IsOwner(user) {
-		if !room.IsGuest(user) {
-			http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
-			return
-		}
+	if ok, _ := room.IsOwnerOrGuest(user); !ok {
+		http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
+		return
 	}
 
 	oldTab, err = models.SelectTabByNumber(newTab.Number, room.Id)
@@ -58,49 +56,92 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := models.UpdateTab(oldTab, models.Tab{Table: newTab.Table}); err != nil {
-		log.Println(err)
-		return
+	if oldTab.Table != newTab.Table {
+		if err := models.UpdateTab(oldTab, models.Tab{Table: newTab.Table}); err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
-	for i := range newTab.Requests {
-		if newTab.Requests[i].Operation == "deleting" {
-			models.DeleteRequest(newTab.Number, newTab.RoomId, newTab.Requests[i].ProductName)
-			continue
-		}
+	for i, request := range newTab.Requests {
+		if request.Operation == "deleting" {
+			models.DeleteRequest(newTab.Number, newTab.RoomId, request.ProductName)
 
-		if newTab.Requests[i].Operation == "updating" {
-			request := models.Request{
-				ProductName: newTab.Requests[i].ProductName,
-				TabNumber:   newTab.Number,
-				TabRoom:     newTab.RoomId,
+			product, err := models.SelectOneProduct(room.Id, request.ProductName)
+			if err != nil {
+				panic(err)
 			}
 
-			models.UpdateRequestQuantity(request, uint(newTab.Requests[i].Quantity))
+			_, err = models.SelectRequest(request.ProductName, newTab.Number, room.Id)
+			if err != nil {
+				continue
+			}
+
+			models.DecreaseTabValue(newTab.Number, room.Id, product.Price*float64(request.Quantity))
 			continue
 		}
 
-		if newTab.Requests[i].Operation == "inserting" {
+		if request.Operation == "updating" {
+			request, err := newTab.ToNormalRequest(i)
+			if err != nil {
+				panic(err)
+			}
+
+			oldRequest, err := models.SelectRequest(request.ProductName, newTab.Number, room.Id)
+			if err != nil {
+				panic(err)
+			}
+
+			product, err := models.SelectOneProduct(room.Id, newTab.Requests[i].ProductName)
+			if err != nil {
+				panic(err)
+			}
+
+			if oldRequest.Quantity > request.Quantity {
+				models.DecreaseTabValue(newTab.Number, room.Id, product.Price*float64(oldRequest.Quantity - request.Quantity))
+			}
+
+			if oldRequest.Quantity < request.Quantity {
+				models.IncreaseTabValue(newTab.Number, room.Id, product.Price*float64(request.Quantity - oldRequest.Quantity))
+			}
+
+			models.UpdateRequestQuantity(request, uint(request.Quantity))
+			continue
+		}
+
+		if request.Operation == "inserting" {
 			tab := models.Tab{
 				Number: newTab.Number,
 				RoomId: newTab.RoomId,
 			}
 
-			request := models.Request{
-				ProductListRoom: newTab.RoomId,
-				ProductName:     newTab.Requests[i].ProductName,
-				Quantity:        newTab.Requests[i].Quantity,
+			request, err := newTab.ToNormalRequest(i)
+			if err != nil {
+				panic(err)
 			}
 
-			err := models.InsertRequest(tab, request)
+			err = models.InsertRequest(tab, request)
 			if err != nil && database.IsDuplicateKeyError(err.Error()) {
-				request := models.SelectRequest(newTab.Requests[i].ProductName, newTab.Number, newTab.RoomId)
-				models.UpdateRequestQuantity(request, uint(request.Quantity+newTab.Requests[i].Quantity))
+				_, err := models.SelectRequest(request.ProductName, newTab.Number, room.Id)
+				if err != nil {
+					panic(err)
+				}
+
+				product, err := models.SelectOneProduct(room.Id, newTab.Requests[i].ProductName)
+				if err != nil {
+					panic(err)
+				}
+
+				models.IncreaseTabValue(newTab.Number, room.Id, product.Price*float64(request.Quantity))
+
+				models.UpdateRequestQuantity(request, uint(request.Quantity))
+				continue
 			}
 		}
 	}
 
-	SendTab(room.Id, newTab.ToNormalTab())
+  tab, _ := models.SelectTabByNumber(oldTab.Number, room.Id)
+	SendTab(room.Id, tab)
 
 	w.WriteHeader(http.StatusOK)
 }

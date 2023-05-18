@@ -11,7 +11,7 @@ type Request struct {
 	TabNumber       int    `json:"tab_number"`
 	ProductName     string `json:"product_name"`
 	ProductListRoom int    `json:"product_list"`
-	Quantity        int    `json:"quantity"`
+	Quantity        uint    `json:"quantity"`
 }
 
 type UpdatingRequest struct {
@@ -19,7 +19,7 @@ type UpdatingRequest struct {
 	TabNumber       int    `json:"tab_number"`
 	ProductName     string `json:"product_name"`
 	ProductListRoom int    `json:"product_list"`
-	Quantity        int    `json:"quantity"`
+	Quantity        uint   `json:"quantity"`
 
 	Operation string `json:"operation"`
 }
@@ -44,7 +44,7 @@ func InsertRequest(tab Tab, request Request) error {
 	return nil
 }
 
-func SelectRequest(productName string, tabNumber, roomId int) Request {
+func SelectRequest(productName string, tabNumber, roomId int) (Request, error) {
 	var request Request
 	var db = database.GetConnection()
 
@@ -56,12 +56,10 @@ func SelectRequest(productName string, tabNumber, roomId int) Request {
 
 	if rows.Next() {
 		err := rows.Scan(&request.TabRoom, &request.TabNumber, &request.ProductName, &request.ProductListRoom, &request.Quantity)
-		if err != nil {
-			panic(err)
-		}
+    return request, err
 	}
 
-	return request
+	return request, errors.New("No such request")
 }
 
 func UpdateRequestQuantity(request Request, quantity uint) error {

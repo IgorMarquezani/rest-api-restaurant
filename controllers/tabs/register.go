@@ -39,11 +39,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	tab.RoomId = room.Id
 	tab.PayValue = 0
 
-	if !room.IsOwner(user) {
-		if !room.IsGuest(user) {
-			http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
-			return
-		}
+	if ok, _ := room.IsOwnerOrGuest(user); !ok {
+		http.Error(w, "Not a guest in that room", http.StatusUnauthorized)
+		return
 	}
 
 	if err := models.InsertTab(&tab); err != nil {
@@ -56,6 +54,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  tab.GroupRequests()
+
 	for i := 0; i < len(tab.Requests); i++ {
 		if tab.Requests[i].Quantity <= 0 {
 			continue
@@ -63,8 +63,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 		err := models.InsertRequest(tab, tab.Requests[i])
 		if err != nil && database.IsDuplicateKeyError(err.Error()) {
-			request := models.SelectRequest(tab.Requests[i].ProductName, tab.Number, tab.RoomId)
+			request, err := models.SelectRequest(tab.Requests[i].ProductName, tab.Number, tab.RoomId)
+      if err != nil {
+        panic(err)
+      }
+
 			models.UpdateRequestQuantity(request, uint(request.Quantity+tab.Requests[i].Quantity))
+
 			howManyIsertions++
 			continue
 		}
