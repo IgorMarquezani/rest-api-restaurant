@@ -65,8 +65,6 @@ AFTER INSERT ON users
 FOR EACH ROW 
 EXECUTE PROCEDURE user_new_room();
 
--- ate aqui tudo ok
-
 create table guests (
   inviting_room integer not null,
   user_id integer not null,
@@ -124,8 +122,28 @@ CREATE TABLE products (
    primary key (name, list_room)
 );
 
+create or replace function next_tab_number (room_id integer)
+returns int as $$
+declare
+  values integer[] := array(select (number) from tabs where room = room_id order by number);
+  length integer = array_length(values, 1);
+  i int = 1;
+begin
+  if values[1] is null then 
+  	return 1;
+  end if;
+  while i < length loop
+    if values[i+1] != values[i]+1 then
+      return (values[i]+1);
+    end if;
+      i = i+1;
+  end loop;
+  return ((select max(number) from tabs where room = room_id)+1);
+end;
+$$ language plpgsql;
+
 CREATE TABLE tabs (
-	 number INTEGER, 
+	 number INTEGER not null, 
    room INTEGER,
    pay_value decimal default 0,
    time_maded time default current_time,
@@ -145,88 +163,108 @@ create table requests (
   foreign key (tab_room, tab_number) references tabs (room, number) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-create or replace function update_request_tab_number()
-returns trigger as $$
-begin
-  if new.number != old.number then
-    update requests set tab_number = new.number where tab_room = old.room and tab_number = new.number;
-  elsif new.room != old.room then
-    raise notice 'its not possible to change the rooms tab number';
-    new.room = old.room;
-  end if;
-  
-  return new;
-end;
-$$ language plpgsql;
+-- create or replace function update_request_tab_number()
+-- returns trigger as $$
+-- begin
+--   if new.number != old.number then
+--     update requests set tab_number = new.number where tab_room = old.room and tab_number = new.number;
+--   elsif new.room != old.room then
+--     raise notice 'its not possible to change the rooms tab number';
+--     new.room = old.room;
+--   end if;
+--   
+--   return new;
+-- end;
+-- $$ language plpgsql;
 
-create or replace trigger update_request_tab_number_trigger
-after update on tabs
-for each row
-execute procedure update_request_tab_number();
+-- create or replace trigger update_request_tab_number_trigger
+-- after update on tabs
+-- for each row
+-- execute procedure update_request_tab_number();
 
 -- adiciona ao valor final da comando de acordo com N pedidos adicionados a comanda 
-create or replace function add_to_final_tab_value()
-returns trigger as $$
-declare
-  total_value decimal = (select (pay_value) from tabs where number = new.tab_number and room = new.tab_room); 
-  new_value decimal = ((
-    select (price) from products join product_list on product_list.name = products.list_name and product_list.origin_room = products.list_room
-    where products.name = new.product_name and products.list_room = new.product_list) * new.quantity);
-begin
-  UPDATE tabs
-    SET pay_value = total_value + new_value 
-    WHERE number = new.tab_number and room = new.tab_room;
-    return new;
-end;
-$$ language plpgsql;
+-- create or replace function add_to_final_tab_value()
+-- returns trigger as $$
+-- declare
+--   total_value decimal = (select (pay_value) from tabs where number = new.tab_number and room = new.tab_room); 
+--   new_value decimal = ((
+--     select (price) from products join product_list on product_list.name = products.list_name and product_list.origin_room = products.list_room
+--     where products.name = new.product_name and products.list_room = new.product_list) * new.quantity);
+-- begin
+--   UPDATE tabs
+--     SET pay_value = total_value + new_value 
+--     WHERE number = new.tab_number and room = new.tab_room;
+--     return new;
+-- end;
+-- $$ language plpgsql;
 
-create or replace trigger add_to_tab_value_trigger
-after insert on requests
-for each row
-execute procedure add_to_final_tab_value();
+-- create or replace trigger add_to_tab_value_trigger
+-- after insert on requests
+-- for each row
+-- execute procedure add_to_final_tab_value();
 
--- remove X do valor final baseado em N pedidos removidos da comanda
-create or replace function remove_from_final_tab_value()
-returns trigger as $$
-declare
-  total_value decimal = (select (pay_value) from tabs where number = new.tab_number and room = new.tab_room); 
-  new_value decimal = ((
-    select (price) from products join product_list on product_list.name = products.list_name and product_list.origin_room = products.list_room
-    where products.name = new.product_name and products.list_room = new.product_list) * new.quantity);
-begin
-  UPDATE tabs
-    SET pay_value = total_value - new_value 
-    WHERE number = new.tab_number and room = new.tab_room;
-    return new;
-end;
-$$ language plpgsql;
+-- -- remove X do valor final baseado em N pedidos removidos da comanda
+-- create or replace function remove_from_final_tab_value()
+-- returns trigger as $$
+-- declare
+--   total_value decimal = (select (pay_value) from tabs where number = new.tab_number and room = new.tab_room); 
+--   new_value decimal = ((
+--     select (price) from products join product_list on product_list.name = products.list_name and product_list.origin_room = products.list_room
+--     where products.name = new.product_name and products.list_room = new.product_list) * new.quantity);
+-- begin
+--   UPDATE tabs
+--     SET pay_value = total_value - new_value 
+--     WHERE number = new.tab_number and room = new.tab_room;
+--     return new;
+-- end;
+-- $$ language plpgsql;
 
-create or replace trigger remove_from_tab_value_trigger 
-after delete on requests
-for each row
-execute procedure remove_from_final_tab_value();
+-- create or replace trigger remove_from_tab_value_trigger 
+-- after delete on requests
+-- for each row
+-- execute procedure remove_from_final_tab_value();
 
 -- atualiza o valor final da comando caso haja mudança em N pedidos da comanda
-create or replace function update_final_tab_value()
-returns trigger as $$
-declare
-  total_value decimal = (select (pay_value) from tabs where number = new.tab_number and room = new.tab_room); 
-  old_value decimal = (old.value * old.quantity);
-  new_value decimal = ((
-    select (price) from products join product_list on product_list.name = products.list_name and product_list.origin_room = products.list_room
-    where products.name = new.product_name and products.list_room = new.product_list) * new.quantity);
-begin
-  UPDATE tabs
-    SET pay_value = ((total_value - old_value) + new_value)
-    WHERE number = new.tab_number and room = new.tab_room;
-    return new;
-end;
-$$ language plpgsql;
+-- create or replace function update_final_tab_value()
+-- returns trigger as $$
+-- declare
+--   total_value decimal = (select (pay_value) from tabs where number = new.tab_number and room = new.tab_room); 
+--   old_value decimal = (old.value * old.quantity);
+--   new_value decimal = ((
+--     select (price) from products join product_list on product_list.name = products.list_name and product_list.origin_room = products.list_room
+--     where products.name = new.product_name and products.list_room = new.product_list) * new.quantity);
+-- begin
+--   UPDATE tabs
+--     SET pay_value = ((total_value - old_value) + new_value)
+--     WHERE number = new.tab_number and room = new.tab_room;
+--     return new;
+-- end;
+-- $$ language plgsql;
 
-create or replace trigger update_final_tab_value_trigger 
-after update on requests
-for each row
-execute procedure update_final_tab_value();
+-- create or replace trigger update_final_tab_value_trigger 
+-- after update on requests
+-- for each row
+-- execute procedure update_final_tab_value();
+
+create table payed_tabs (
+  id bigint not null,
+  number integer not null,
+  room integer not null references rooms (id),
+  value decimal(1000, 2) default 0,
+  date date not null default current_date,
+  table_number INTEGER default 0, 
+  PRIMARY KEY(id, room)
+);
+
+create table payed_requests (
+  room integer not null,
+  tab_id serial not null,
+  product_name text not null,
+  product_list integer not null, 
+  quantity integer not null,
+  PRIMARY KEY(product_name, tab_id, room),
+  foreign key (room, tab_id) references payed_tabs (room, id) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
 -- tabelas experimentais ou para uso especifico dos desenvolvedores
 create table how_many_register (
