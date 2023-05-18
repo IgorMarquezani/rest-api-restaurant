@@ -113,13 +113,17 @@ const (
 	// select * from tabs where room = $1 order by number asc;
 	SelectTabsInRoom string = "select * from tabs where room = $1 order by number asc"
 	// insert into tabs (number, room, pay_value, time_maded, table_number) values ($1, $2, $3, $4, $5);
-	InsertTab string = "insert into tabs (number, room, pay_value, time_maded, table_number) values ($1, $2, $3, $4, $5)"
+	InsertTab string = "insert into tabs (number, room, pay_value, time_maded, table_number) values (next_tab_number($1), $2, $3, $4, $5) returning number;"
 	// update tabs set table_number = $1 where number = 2$ and room = 3$;
 	UpdateTab string = "update tabs set table_number = $1 where number = $2 and room = $3;"
 	// delete from tabs where number = $1 and room = $2;
 	DeleteTab string = "delete from tabs where number = $1 and room = $2;"
 	// select max(number)+1 from tabs where room = $1;
 	SelectMaxTabId string = "select max(number)+1 from tabs where room = $1"
+  // update tabs set value += $1 where number = $2 and room = $3;
+  IncreaseTabValue string = "update tabs set pay_value = (select pay_value from tabs where number = $1 and room = $2) + $3 where number = $4 and room = $5;"
+  // update tabs set value += $1 where number = $2 and room = $3;
+  DecreaseTabValue string = "update tabs set pay_value = (select pay_value from tabs where number = $1 and room = $2) - $3 where number = $4 and room = $5;"
 
 	// QUERY FOR REQUESTS
 	// insert into requests values ($1, $2, $3, $4, $5);
