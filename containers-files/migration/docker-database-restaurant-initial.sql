@@ -85,22 +85,22 @@ CREATE TABLE invites (
 );
 
 -- caso um convite seja aceito, atualiza a tabela de convidados
-create or replace function guest_after_invite()
-returns trigger as $$
-declare
-  status text = (select (status) from invites where target = old.target);
-begin
-  if (status = 'aceppeted') then
-    insert into guests (inviting_room, user_id) values (old.inviting_room, old.target);
-  end if;
-  return new;
-end;
-$$ language plpgsql;
+-- create or replace function guest_after_invite()
+-- returns trigger as $$
+-- declare
+--   status text = (select (status) from invites where target = old.target);
+-- begin
+--   if (status = 'aceppeted') then
+--     insert into guests (inviting_room, user_id) values (old.inviting_room, old.target);
+--   end if;
+--   return new;
+-- end;
+-- $$ language plpgsql;
 
-create or replace trigger guest_after_invite
-after update on invites
-for each row
-execute procedure guest_after_invite();
+-- create or replace trigger guest_after_invite
+-- after update on invites
+-- for each row
+-- execute procedure guest_after_invite();
 
 -- ate aqui tambem parece tudo ok. Farei mais testes amanha
 
