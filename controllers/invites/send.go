@@ -70,6 +70,11 @@ func Send(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  if room.IsGuest(target) {
+    http.Error(w, "Already a guest", http.StatusAlreadyReported)
+    return
+  }
+
 	if invite, _ := models.SelectInvite(target, room); invite.Id != 0 {
 		http.Error(w, models.ErrInvitedAlready, http.StatusAlreadyReported)
 		return
@@ -85,7 +90,5 @@ func Send(w http.ResponseWriter, r *http.Request) {
 	target.ClearCriticalInfo()
 
 	w.WriteHeader(http.StatusOK)
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "    ")
-	encoder.Encode(target)
+  controllers.EncodeJSON(w, target)
 }

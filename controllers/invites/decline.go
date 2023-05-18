@@ -5,19 +5,18 @@ import (
 	"strconv"
 
 	"github.com/api/controllers"
-	"github.com/api/database"
 	"github.com/api/models"
 	"github.com/gorilla/mux"
 )
 
-func Accept(w http.ResponseWriter, r *http.Request) {
+func Decline(w http.ResponseWriter, r *http.Request) {
+	controllers.AllowCrossOrigin(&w, "*")
+
 	err, user, _ := controllers.VerifySession(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-
-	controllers.AllowCrossOrigin(&w, "*")
 
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.Atoi(idStr)
@@ -32,22 +31,11 @@ func Accept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := models.InsertGuest(uint(invite.InvitingRoom), uint(invite.Target), invite.Permission); err != nil {
-		if database.IsDuplicateKeyError(err.Error()) {
-			models.DeleteInvite(uint(invite.Id))
-			http.Error(w, "User already in room", http.StatusAlreadyReported)
-			return
-		}
-
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
 	err = models.DeleteInvite(uint(invite.Id))
 	if err != nil {
     http.Error(w, "Internal server error", http.StatusInternalServerError)
     return
 	}
 
-	w.WriteHeader(http.StatusOK)
+  w.WriteHeader(http.StatusOK)
 }
