@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,7 +21,9 @@ func LogRequest(r *http.Request) {
 	var reset string = "\033[0m"
 	var urlColor string = "\033[37m"
 	var bodyColor string = "\033[35m"
+
 	var methodColor string
+	var buffer *bytes.Buffer
 
 	if r.Method == http.MethodPost {
 		// Blue
@@ -39,8 +42,15 @@ func LogRequest(r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
+	if json.Valid(body) {
+		buffer = bytes.NewBuffer([]byte{})
+		json.Indent(buffer, body, "", "  ")
+	} else {
+		buffer = bytes.NewBuffer(body)
+	}
+
 	fmt.Printf("URL: %s%v%s\n", urlColor, r.URL, reset)
 	fmt.Printf("Method: %s%v%s\n", methodColor, r.Method, reset)
-	fmt.Printf("Body: %s%v%s\n", bodyColor, string(body), reset)
+	fmt.Printf("Body: %s%v%s\n", bodyColor, string(buffer.Bytes()), reset)
 	fmt.Println("+-----------------------------------------------------------+")
 }
