@@ -66,7 +66,7 @@ func TabsRoutes(r *mux.Router) {
 func InvitesRoutes(r *mux.Router) {
 	r.HandleFunc("/api/invite/send/{email}/", invites.Send).Methods(http.MethodPost)
 
-	r.HandleFunc("/api/invite/accept/{id}/", invites.Send).Methods(http.MethodPost)
+	r.HandleFunc("/api/invite/accept/{id}/", invites.Accept).Methods(http.MethodPost)
 }
 
 func HandleRequest() {
