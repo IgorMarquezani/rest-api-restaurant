@@ -66,7 +66,9 @@ func TabsRoutes(r *mux.Router) {
 func InvitesRoutes(r *mux.Router) {
 	r.HandleFunc("/api/invite/send/{email}/", invites.Send).Methods(http.MethodPost)
 
-	r.HandleFunc("/api/invite/accept/{id}/", invites.Accept).Methods(http.MethodPost)
+	r.HandleFunc("/api/invite/accept/{id}", invites.Accept).Methods(http.MethodPost)
+
+	r.HandleFunc("/api/invite/decline/{id}", invites.Decline).Methods(http.MethodPost, http.MethodPut)
 }
 
 func HandleRequest() {
@@ -81,9 +83,9 @@ func HandleRequest() {
 	UserRoutes(r)
 	TabsRoutes(r)
 
-  server := http.Server{}
-  server.Addr = "localhost:3300"
-  server.Handler = r
+	server := http.Server{}
+	server.Addr = "localhost:3300"
+	server.Handler = r
 
 	fmt.Println("Listening on localhost:3300")
 	log.Fatal(server.ListenAndServe())

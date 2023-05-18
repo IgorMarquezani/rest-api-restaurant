@@ -67,6 +67,18 @@ func SelectInvite(user User, room Room) (Invite, error) {
 	return invite, nil
 }
 
+func DeleteInvite(inviteId uint) error {
+	db := database.GetConnection()
+
+	del, err := db.Query(database.DeleteInvite, inviteId)
+	if err != nil {
+		return err
+	}
+	del.Close()
+
+	return nil
+}
+
 func SearchForInvites(v []Invite, id int) (Invite, bool) {
 	for _, invite := range v {
 		if invite.Id == id {
