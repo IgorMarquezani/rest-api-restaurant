@@ -61,6 +61,8 @@ func TabsRoutes(r *mux.Router) {
 	r.HandleFunc("/api/tab/delete/{number}", tabs.Delete).Methods(http.MethodDelete)
 
 	r.HandleFunc("/api/tab/websocket/{room-id}", tabs.Websocket).Methods(http.MethodGet)
+
+	r.HandleFunc("api/tab/pay/{number}", tabs.Pay).Methods(http.MethodPost)
 }
 
 func InvitesRoutes(r *mux.Router) {

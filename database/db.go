@@ -127,6 +127,10 @@ const (
 	// update tabs set value += $1 where number = $2 and room = $3;
 	DecreaseTabValue string = "update tabs set pay_value = (select pay_value from tabs where number = $1 and room = $2) - $3 where number = $4 and room = $5;"
 
+	// QUERY FOR PAYED_TABS
+	// insert into payed_tabs (number, room, value, date, table_number) values ($1, $2, $3, $4, $5);
+	InsertPayedTab string = "insert into payed_tabs (number, room, value, date, table_number) values ($1, $2, $3, $4, $5); returning id"
+
 	// QUERY FOR REQUESTS
 	// insert into requests values ($1, $2, $3, $4, $5);
 	InsertRequest string = "insert into requests values ($1, $2, $3, $4, $5);"
@@ -140,6 +144,10 @@ const (
 	SelectRequestsInTab string = "select * from requests where tab_room = $1 and tab_number = $2 order by tab_number asc;"
 	// update requests set quantity = $1 where product_name = $2 and tab_number = $3 and tab_room = $4;
 	UpdateRequestQuantity string = "update requests set quantity = $1 where product_name = $2 and tab_number = $3 and tab_room = $4;"
+
+	// QUERY FOR PAYED_TABS
+	// insert into payed_request values ($1, $2, $3, $4);
+	InsertPayedRequest string = "insert into payed_request values ($1, $2, $3, $4);"
 )
 
 func IsDuplicateKeyError(warning string) bool {
