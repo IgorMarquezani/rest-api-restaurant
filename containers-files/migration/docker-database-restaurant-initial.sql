@@ -247,7 +247,7 @@ create table requests (
 -- execute procedure update_final_tab_value();
 
 create table payed_tabs (
-  id bigint not null,
+  id bigserial not null,
   number integer not null,
   room integer not null references rooms (id),
   value decimal(1000, 2) default 0,
@@ -260,7 +260,6 @@ create table payed_requests (
   room integer not null,
   tab_id serial not null,
   product_name text not null,
-  product_list integer not null, 
   quantity integer not null,
   PRIMARY KEY(product_name, tab_id, room),
   foreign key (room, tab_id) references payed_tabs (room, id) ON DELETE CASCADE ON UPDATE CASCADE
