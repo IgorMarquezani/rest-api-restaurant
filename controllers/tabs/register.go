@@ -54,7 +54,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  tab.GroupRequests()
+	tab.GroupRequests()
 
 	for i := 0; i < len(tab.Requests); i++ {
 		if tab.Requests[i].Quantity <= 0 {
@@ -64,9 +64,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		err := models.InsertRequest(tab, tab.Requests[i])
 		if err != nil && database.IsDuplicateKeyError(err.Error()) {
 			request, err := models.SelectRequest(tab.Requests[i].ProductName, tab.Number, tab.RoomId)
-      if err != nil {
-        panic(err)
-      }
+			if err != nil {
+				panic(err)
+			}
 
 			models.UpdateRequestQuantity(request, uint(request.Quantity+tab.Requests[i].Quantity))
 
