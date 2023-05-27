@@ -129,7 +129,9 @@ const (
 
 	// QUERY FOR PAYED_TABS
 	// insert into payed_tabs (number, room, value, date, table_number) values ($1, $2, $3, $4, $5);
-	InsertPayedTab string = "insert into payed_tabs (number, room, value, date, table_number) values ($1, $2, $3, $4, $5); returning id"
+	InsertPayedTab string = "insert into payed_tabs (number, room, value, date, table_number) values ($1, $2, $3, $4, $5) returning id;"
+	// select * from payed_tabs where date between $1 and $2;
+	SelectPayedTabWithInterval string = "select * from payed_tabs where date between $1 and $2;"
 
 	// QUERY FOR REQUESTS
 	// insert into requests values ($1, $2, $3, $4, $5);
@@ -147,7 +149,9 @@ const (
 
 	// QUERY FOR PAYED_TABS
 	// insert into payed_request values ($1, $2, $3, $4);
-	InsertPayedRequest string = "insert into payed_request values ($1, $2, $3, $4);"
+	InsertPayedRequest string = "insert into payed_requests values ($1, $2, $3, $4);"
+	// select * from payed_request where tab_id = $1;
+	SelectPayedRequests string = "select * from payed_requests where room = $1 and tab_id = $2;"
 )
 
 func IsDuplicateKeyError(warning string) bool {

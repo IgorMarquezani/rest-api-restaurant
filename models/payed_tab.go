@@ -1,8 +1,6 @@
 package models
 
-import (
-	"github.com/api/database"
-)
+import "github.com/api/database"
 
 type PayedTab struct {
 	Id     uint64  `json:"id"`
@@ -15,29 +13,31 @@ type PayedTab struct {
 	Requests []PayedRequest `json:"requests"`
 }
 
-func NewPayedTab(tab Tab, date string) PayedTab {
-	pt := PayedTab{
-		Number:   uint(tab.Number),
-		RoomId:   uint(tab.RoomId),
-		Value:    tab.PayValue,
-		Date:     date,
-		Table:    uint(tab.Table),
-		Requests: make([]PayedRequest, len(tab.Requests)),
+func SelectPayedTabs(from, to string) ([]PayedTab, error) {
+	var (
+		db        = database.GetConnection()
+		payedTabs = make([]PayedTab, 0)
+	)
+
+	sel, err := db.Query(database.SelectPayedTabWithInterval, from, to)
+	if err != nil {
+		return nil, err
 	}
 
-	return pt
-}
+	defer sel.Close()
 
-// this function should be called after inserting the payed_tab so it will have the Id field with some value
-func (pt *PayedTab) AddRequests(requests []Request) {
-	pt.Requests = make([]PayedRequest, len(requests))
+	for sel.Next() {
+		pt := PayedTab{}
 
-	for _, request := range requests {
-		pr := NewPayedRequest(request)
+		err := sel.Scan(&pt.Id, &pt.Number, &pt.RoomId, &pt.Value, &pt.Date, &pt.Table)
+		if err != nil {
+			return nil, err
+		}
 
-		pr.TabId = pt.Id
-		pt.Requests = append(pt.Requests, pr)
+		payedTabs = append(payedTabs, pt)
 	}
+
+	return payedTabs, nil
 }
 
 func (pt PayedTab) Insert() (uint64, error) {
@@ -59,6 +59,28 @@ func (pt PayedTab) Insert() (uint64, error) {
 	return pt.Id, err
 }
 
+func NewPayedTab(tab Tab, date string) PayedTab {
+	return PayedTab{
+		Number:   uint(tab.Number),
+		RoomId:   uint(tab.RoomId),
+		Value:    tab.PayValue,
+		Date:     date,
+		Table:    uint(tab.Table),
+		Requests: make([]PayedRequest, len(tab.Requests)),
+	}
+}
+
+func (pt *PayedTab) AddRequests(requests []Request) {
+	pt.Requests = make([]PayedRequest, len(requests))
+
+	for i, request := range requests {
+		pr := NewPayedRequest(request)
+
+		pr.TabId = pt.Id
+		pt.Requests[i] = pr
+	}
+}
+
 func (pt PayedTab) InsertRequests() error {
 	for _, request := range pt.Requests {
 		err := request.Insert()
@@ -69,19 +91,3 @@ func (pt PayedTab) InsertRequests() error {
 
 	return nil
 }
-
-// func (pt PayedTab) InsertWithRequests() error {
-// 	var err error
-
-// 	pt.Id, err = pt.Insert()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = pt.InsertRequests()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

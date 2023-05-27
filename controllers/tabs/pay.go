@@ -52,7 +52,7 @@ func Pay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = time.Parse("yyyy-mm-dd", p.Date)
+	_, err = time.Parse("2006-01-02", p.Date)
 	if err != nil {
 		http.Error(w, "Date format should be like the following type: yyyy-mm-dd", http.StatusBadRequest)
 		return
@@ -65,13 +65,13 @@ func Pay(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	tab.FindRequests()
-
 	pt.AddRequests(tab.Requests)
 
 	if err := pt.InsertRequests(); err != nil {
 		panic(err)
 	}
+
+	models.DeleteTab(tab)
 
 	w.WriteHeader(http.StatusOK)
 	controllers.EncodeJSON(w, pt)

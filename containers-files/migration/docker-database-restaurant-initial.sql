@@ -265,6 +265,14 @@ create table payed_requests (
   foreign key (room, tab_id) references payed_tabs (room, id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+create table users_session (
+	who int primary key,
+	active_room int,
+	securePS varchar unique not null,
+	foreign key (who) references users (id),
+	foreign key (active_room) references rooms (id)
+);
+
 -- tabelas experimentais ou para uso especifico dos desenvolvedores
 create table how_many_register (
   users integer,
@@ -284,10 +292,3 @@ AFTER INSERT ON users
 FOR EACH STATEMENT 
 EXECUTE PROCEDURE users_log_update();
 
-create table users_session (
-	who int primary key,
-	active_room int,
-	securePS varchar unique not null,
-	foreign key (who) references users (id),
-	foreign key (active_room) references rooms (id)
-);

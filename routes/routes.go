@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/api/controllers/invites"
+	payedtabs "github.com/api/controllers/payed_tabs"
 	"github.com/api/controllers/products"
 	"github.com/api/controllers/products_lists"
 	"github.com/api/controllers/rooms"
@@ -62,7 +63,11 @@ func TabsRoutes(r *mux.Router) {
 
 	r.HandleFunc("/api/tab/websocket/{room-id}", tabs.Websocket).Methods(http.MethodGet)
 
-	r.HandleFunc("api/tab/pay/{number}", tabs.Pay).Methods(http.MethodPost)
+	r.HandleFunc("/api/tab/pay", tabs.Pay).Methods(http.MethodPost)
+}
+
+func PayedTabsRoutes(r *mux.Router) {
+	r.HandleFunc("/api/payed_tab/select/{from}/{to}", payedtabs.SelectInterval).Methods(http.MethodGet)
 }
 
 func InvitesRoutes(r *mux.Router) {
@@ -78,12 +83,17 @@ func HandleRequest() {
 	r.Use(middleware.SetAllContentType)
 
 	SessionsRoutes(r)
+
 	ProdListRoutes(r)
 	ProductsRoutes(r)
+
 	InvitesRoutes(r)
 	RoomsRoutes(r)
+
 	UserRoutes(r)
+
 	TabsRoutes(r)
+	PayedTabsRoutes(r)
 
 	server := http.Server{}
 	server.Addr = "localhost:3300"

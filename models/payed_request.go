@@ -9,6 +9,33 @@ type PayedRequest struct {
 	Quantity    uint   `json:"quantity"`
 }
 
+func SelectPayedRequests(roomId uint, tabId uint64) ([]PayedRequest, error) {
+	var (
+		db            = database.GetConnection()
+		payedRequests = make([]PayedRequest, 0)
+	)
+
+	sel, err := db.Query(database.SelectPayedRequests, roomId, tabId)
+	if err != nil {
+		return nil, err
+	}
+
+	defer sel.Close()
+
+	for sel.Next() {
+		pr := PayedRequest{}
+
+		err := sel.Scan(&pr.RoomId, &pr.TabId, &pr.ProductName, &pr.Quantity)
+		if err != nil {
+			return nil, err
+		}
+
+		payedRequests = append(payedRequests, pr)
+	}
+
+	return payedRequests, nil
+}
+
 func NewPayedRequest(request Request) PayedRequest {
 	return PayedRequest{
 		RoomId:      uint(request.TabRoom),
